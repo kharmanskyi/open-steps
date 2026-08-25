@@ -69,10 +69,12 @@ in this repository, with notes on what the rewrite changed:
 
 ## Quick start
 
-You need Claude Code. This pack is built and tested for it and nothing else
-so far. `git` and `gh` are optional: a couple of the skills read project state
-through them, and without those tools more of the output honestly says "not
-checked".
+Claude Code is what the pack is built and measured on, and the only tool where
+everything works with no extra steps. The skills and the routing block also
+install into Codex, Cursor and Gemini CLI, see
+[Other agents](#other-agents-codex-cursor-gemini-cli) below. `git` and `gh` are
+optional: a couple of the skills read project state through them, and without
+those tools more of the output honestly says "not checked".
 
 Clone this repository:
 
@@ -111,6 +113,35 @@ To update: `claude plugin update open-steps`. To remove:
 The one piece that stays manual is the writing style, because turning it on
 would silently replace whatever style you already chose. Two lines, in
 [`docs/output-style.md`](docs/output-style.md).
+
+## Other agents: Codex, Cursor, Gemini CLI
+
+Codex, Cursor and Gemini CLI all read `~/.agents/skills/`, so one command
+installs the pack into all three. Run it from the folder holding the clone:
+
+```bash
+mkdir -p ~/.agents/skills && cp -R open-steps/skills/os-* ~/.agents/skills/
+```
+
+Then the routing block goes into whatever that tool treats as your standing
+instructions, doing the same job it does in `CLAUDE.md` above:
+
+| Tool | Routing block goes in | Evidence |
+|---|---|---|
+| Codex | `~/.codex/AGENTS.md` | checked, on Codex CLI 0.145 |
+| Cursor | `AGENTS.md` in the project root | Cursor's documentation |
+| Gemini CLI | `~/.gemini/GEMINI.md` | Gemini CLI's documentation |
+
+The hooks are the part that differs per tool. Codex runs both of them
+unchanged, with a short block in `~/.codex/config.toml` and one trust prompt to
+accept. Cursor
+and Gemini CLI want JSON where these two print text, so both need an adapter
+that is not written yet, and on Cursor a stop cannot be blocked at all. On
+both, the skills and the routing block install; how reliably the skills fire
+there is not checked.
+
+The commands, the paths, the Codex hook config, and what was run rather than
+read: [`docs/other-agents.md`](docs/other-agents.md).
 
 ## The skills
 

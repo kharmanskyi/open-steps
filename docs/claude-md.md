@@ -34,6 +34,10 @@ Reports live in `~/.claude/open-steps/reports/<project>/`. Read `latest.md`
 before re-exploring a repository you have worked in before.
 ```
 
+On another agent the same block goes in that agent's own instructions file
+instead. [`docs/other-agents.md`](other-agents.md) has the file and the command
+for each, and the hooks below are a separate matter on those tools.
+
 ## Why this is required and not a nicety
 
 A skill is **model-invoked**: the agent decides whether to load it. Two of these

@@ -87,6 +87,18 @@ case "$out" in
   *) check "the baseline stays off stdout" 0 0 ;;
 esac
 
+echo "CASE 9  a payload from another agent, with fields these hooks do not know"
+# Codex and Gemini CLI send the same session_id inside a fuller payload. The
+# baseline is taken from a plain one and the stop reads the fuller one, so a
+# session id that failed to parse would fall back, stop matching, and this case
+# would go silent instead of asking. That is what makes it worth a case.
+H="$(mktemp -d)"; newrepo
+start S9
+echo change >> a.txt
+printf '{"session_id":"S9","cwd":"%s","transcript_path":null,"model":"gpt-5","permission_mode":"default"}' "$PWD" \
+  | HOME="$H" bash "$PACK/hooks/stop-report.sh" 2>/dev/null
+check "the session id is still found" 2 $?
+
 echo
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]

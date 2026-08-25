@@ -22,7 +22,7 @@ to change something, six rules cover it.
    treats it as read-only. `Write(path)` is not a rule Claude Code reads, use
    `Edit(path)`.
 
-Testing the hooks: `bash hooks/test.sh` puts both of them through eight
+Testing the hooks: `bash hooks/test.sh` puts both of them through nine
 scenarios in throwaway repositories, with a throwaway home directory, so it
 touches nothing of yours. Run one by hand instead and remember that both read
 from standard input: add `</dev/null` or they sit there waiting for a payload
