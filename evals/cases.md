@@ -32,6 +32,9 @@ that exact skill switched on by itself, with nobody naming it.
 | os-ask-simple | The plan suggests adding a message queue for emails. Is this worth doing, or would something simpler do? |
 | os-ask-simple | Should we add a queue here or is that overkill? What would you pick? |
 | os-ask-simple | You need a decision from me about the database. Ask me simply. |
+| os-what-could-go-wrong | We are about to sign a three-year office lease with no break clause. What could go wrong? |
+| os-what-could-go-wrong | Before we migrate the database this Saturday, poke holes in the plan: one four-hour window, 50 million rows, and rollback is repointing back. |
+| os-what-could-go-wrong | We have decided to raise prices 20% for existing customers next month. Do a premortem on it, what are we missing? |
 
 ## Should not fire
 

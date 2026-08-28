@@ -6,6 +6,7 @@ Invoke the skill. Do not improvise the answer in its place.
 |---|---|
 | I ask what is next, what is left, or what is blocked | `os-whats-next` |
 | **Any technical question you put to me, or any options you offer** | `os-ask-simple` |
+| Something hard to undo is about to be agreed, or I ask what could go wrong | `os-what-could-go-wrong` |
 | **Any message where you ask me to do something** - run a command, paste a value, approve, choose, test on a device | `os-step-by-step` |
 | I ask about other sessions, or to accept work one of them finished | `os-check-work` |
 | Work is finished, or I ask how it went | `os-done-or-not` |

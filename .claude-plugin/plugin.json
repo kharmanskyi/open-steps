@@ -1,12 +1,13 @@
 {
   "name": "open-steps",
-  "description": "Skills that make a Claude Code session legible to someone who does not read code: plain-language session reports, followable operator instructions, decisions framed as questions with a recommendation, what-to-do-next orchestration, verification of work done in other sessions, and on-demand restatement of any text in plain words.",
+  "description": "Skills that make a Claude Code session legible to someone who does not read code: plain-language session reports, followable operator instructions, decisions framed as questions with a recommendation, a premortem that attacks a decision before it is locked in, what-to-do-next orchestration, verification of work done in other sessions, and on-demand restatement of any text in plain words.",
   "version": "0.1.0",
   "license": "MIT",
   "keywords": [
     "claude-code",
     "agent-skills",
     "session-report",
+    "premortem",
     "plain-language",
     "orchestration"
   ],

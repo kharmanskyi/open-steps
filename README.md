@@ -150,6 +150,7 @@ read: [`docs/other-agents.md`](docs/other-agents.md).
 | [`os-done-or-not`](skills/os-done-or-not/) | A one-screen report with a verdict: done or not, anything needed from you, any new debt, safe to close | Work wraps up, or you ask how it went |
 | [`os-step-by-step`](skills/os-step-by-step/) | Numbered steps a non-technical person can follow. The agent must first try everything itself and ask only for what truly needs you | The agent needs you to run, paste, click, approve or test something |
 | [`os-ask-simple`](skills/os-ask-simple/) | The question in plain words, what it costs later, and one marked recommendation | The agent has a question or options for you |
+| [`os-what-could-go-wrong`](skills/os-what-could-go-wrong/) | Assumes the decision already failed and works backwards to find out why, in a fresh agent that had no hand in it. Ends on one verdict | Something hard to undo is about to be agreed - a contract, a purchase, a migration, a launch |
 | [`os-whats-next`](skills/os-whats-next/) | Merges what is verified and ready, then recommends the next task and says why in plain words | You ask what is left or what to do next |
 | [`os-check-work`](skills/os-check-work/) | Does not trust another session's report. Checks every claim against what actually happened, then says what to do about it | Another session says it is done |
 | [`os-say-simple`](skills/os-say-simple/) | Rewrites any text in plain words without losing facts or bad news. Give it a number and you get exactly that many points | Any text reads like engineering: a report, a comment, an error, the agent's own answer |
@@ -157,7 +158,9 @@ read: [`docs/other-agents.md`](docs/other-agents.md).
 They work as a loop: `os-whats-next` picks the work, `os-step-by-step` walks
 you through your part, `os-done-or-not` reports the result, `os-check-work`
 accepts what other sessions did, `os-ask-simple` handles the questions on the
-way, and `os-say-simple` rescues any text that still reads like engineering.
+way, `os-what-could-go-wrong` attacks anything hard to undo before it is
+agreed, and `os-say-simple` rescues any text that still reads like
+engineering.
 
 ## Numbers
 
