@@ -33,6 +33,8 @@ incident - check it before you speculate about it.
 existing customers") and say what usually kills decisions of that class,
 including real failures you know of. Test this decision against those before
 inventing new ones. Most decisions fail in the ordinary way for their class.
+This becomes a section of its own in the report. It is the one part a reader
+can check your risks against, so it never dissolves into the cards.
 
 **3. Sweep every area, then publish only what survives.** Hunt for a way to
 fail in each of these:
@@ -152,6 +154,13 @@ decided: three to five sentences restating it with them applied. Otherwise:
 
 ## The detail
 
+### What usually kills decisions like this
+The class this decision belongs to, and the handful of ways decisions of that
+class usually fail - three to six lines - then which of those are live here
+and which are not. Never deliver this by folding it into the risk cards. It is
+what shows the reader whether you attacked the ordinary failures or only the
+ones that happened to occur to you.
+
 ### What was checked
 One line per area from the sweep: the risk it produced, or why nothing
 credible came out of it. All nine appear, including the empty ones.
@@ -171,7 +180,8 @@ are the parts not to churn while fixing the rest.
 ```
 
 **Quick look** (when the dispatch says `MODE: Quick`): part one in full, what
-was checked, the top three to five cards, the thing nobody is questioning, and
+usually kills decisions like this, what was checked, the top three to five
+cards, the thing nobody is questioning, and
 the cheapest way to find out you are wrong. Everything else appears as its one
 line saying it was skipped.
 
