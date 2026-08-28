@@ -22,7 +22,7 @@ scripts in between.
   left. Every transcript says which model wrote it, so renaming a file cannot
   move a column.
 - **The transcripts stay out of the repository.** One measurement is one run of
-  the agent, so a full pass over every phrase on three models is 207 runs and
+  the agent, so a full pass over every phrase on three models is 234 runs and
   12 MB of logs. They go to `~/.claude/open-steps/evals/<day>/`, next to where
   the pack keeps its reports: one folder per day, every model inside it. To see
   what the agent actually answered, open that one file.

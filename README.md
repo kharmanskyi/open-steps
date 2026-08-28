@@ -167,9 +167,9 @@ engineering.
 The pack tells the agent to separate what it measured from what it assumed.
 Same rule for me.
 
-Eighteen phrases a person would actually say, three of them per skill, each
-asked three times, headless, in a working installation, on three Claude
-models. The question every time: did the right skill switch on by itself?
+Eighteen phrases a person would actually say, three of them for each of the
+six skills that existed when this pass ran, each asked three times, headless,
+in a working installation, on three Claude models. The question every time: did the right skill switch on by itself?
 Three off-topic questions, each also asked three times, checked the opposite.
 
 ![Activation per skill on Haiku 4.5, Sonnet 5 and Opus 5](assets/activation.svg)
@@ -185,6 +185,12 @@ Three off-topic questions, each also asked three times, checked the opposite.
 | **All 18 phrases** | **79%** | **96%** | **100%** |
 | Fired on an off-topic question | 1/9 | 0/9 | 0/9 |
 
+`os-what-could-go-wrong` is missing from that table because it was added after
+the pass and has not been measured. Its three phrases are in
+[`cases.md`](evals/cases.md) waiting for the next run. Not checked is not the
+same as fine, and it is the skill most likely to compete with `os-ask-simple`
+for a phrase.
+
 The honest reading, because the misses matter more than the score.
 
 - On Sonnet 5 and Opus 5 this works. Three skills are perfect on every model.
@@ -199,8 +205,9 @@ The honest reading, because the misses matter more than the score.
   a secret on the server, tell me what to do", it wants to know which server
   and which secret. That is the pack's own earn-the-ask rule; a one-shot test
   scores it as a miss.
-- The test set is mine, and it is small. Eighteen phrases in a repository you
-  can read, so write better ones and re-run it.
+- The test set is mine, and it is small. Twenty-one phrases in a repository
+  you can read, eighteen of them measured, so write better ones and re-run
+  it.
 
 Two things earlier rounds cost me, kept here because they are the useful part.
 A negation inside a description ("this is NOT the skill for X") is ignored, so
@@ -219,7 +226,9 @@ another model.
 
 Also measured, and easy to check yourself: the skill descriptions cost **770
 tokens per session**, always on, which Claude Code reports itself with
-`claude plugin details open-steps`. The session-start hook adds its injection
+`claude plugin details open-steps`. That figure was taken before
+`os-what-could-go-wrong` was added and has not been retaken; run the command
+for the current one. The session-start hook adds its injection
 on top, capped by `OPEN_STEPS_MAX_REPORT_LINES`. Installing works from a
 clean empty account, with both hooks connected. `claude plugin validate
 --strict` passes.

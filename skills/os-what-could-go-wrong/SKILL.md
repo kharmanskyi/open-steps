@@ -63,7 +63,7 @@ Close the gaps in this order, and stop as soon as a gap is closed.
 2. **Ask, but earn the ask.** Only a gap where guessing wrong would change the
    verdict is worth the user's attention, and the pack's own rule holds here:
    one question at a time, through `os-ask-simple`. Three is plenty. Nobody
-   there to answer, or the answer would not move the verdict, means skip
+   there to answer, or an answer that would not move the verdict -> skip
    straight to 3.
 3. **Write the guess down as a guess.** Put the assumed value in its line,
    mark it `(assumed)`, and repeat it under "What we are assuming".
@@ -97,9 +97,9 @@ Never summarise that file or paste part of it. Its rules are what stop the
 answer turning into a list of worries, and the writing rules inside it are the
 only ones that reach the agent at all.
 
-For a large Full decision, two or three agents in parallel is worth it: keep
-every distinct risk that survives, and where two describe the same one, keep
-the version with better evidence behind it.
+One agent, not several. Two reports have two verdicts and two candidates for
+the single belief nobody is questioning, and merging them is exactly the
+editing that step 3 forbids.
 
 ## Step 3 - give it to the user straight
 

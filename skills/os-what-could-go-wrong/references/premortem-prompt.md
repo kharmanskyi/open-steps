@@ -45,7 +45,7 @@ fail in each of these:
 | Money | it costs more, earns less, or arrives later than the plan needs |
 | Building it | the work is harder, slower or more tangled than it looks |
 | Running it day to day | it works once and cannot be kept working |
-| The people involved | somebody has to behave a way their own interests argue against |
+| The people involved | somebody has to behave in a way their own interests argue against |
 | Things you depend on | a supplier, partner, platform or tool moves, prices up or leaves |
 | Legal and rules | a contract, a licence, a regulator, a jurisdiction |
 | People misusing it | somebody games the mechanism because it pays to |
@@ -74,8 +74,8 @@ three survivors is itself a finding: say so plainly.
   late.
 - How it shows up: first sign, then the next sign, then the damage, with
   rough timing.
-- Early warning: What to watch (the thing measured) - When to worry (the
-  value that means trouble) - When to check (how often, or at which step) -
+- Early warning: What to watch (the thing measured) · When to worry (the
+  value that means trouble) · When to check (how often, or at which step) ·
   What to do then (the actual step, not "review").
 - What to do about it: the change, then what gets worse if you make it, then
   which of the four buckets it lands in.
@@ -136,10 +136,13 @@ answers the question on its own; part two is for whoever wants the working.
 | **Why** | <one line naming the finding that decided it> |
 | **Worst case** | <what is actually lost, in money, time or trust> |
 
-**The biggest risks**
+**The biggest risks** - one line each, worst expected damage first, at most
+three. One line per surviving risk and no more: if only two survived, list two
+and say that only two did. If none survived, this heading is replaced by one
+line saying the sweep found nothing that kills the decision, and "Fix before
+you commit" carries only the verifications still worth doing.
 1. <how it happens and what it costs, one line> (risk 1)
 2. <...> (risk 2)
-3. <...> (risk 3)
 
 **The thing nobody is questioning**
 <one line>
@@ -198,7 +201,7 @@ line saying it was skipped.
    risk with a mechanism, not a footnote about culture.
 5. Look for what disproves the decision, not what confirms it. You are not
    assembling a case for the plan and you are not assembling one against it.
-6. Good news goes in "What holds", at the end. Never in the opening, and
-   never as a cushion around a finding.
+6. Good news beyond the verdict itself goes in "What holds", at the end.
+   Never in the opening, and never as a cushion around a finding.
 7. "This decision is sound" is a legitimate verdict after the attack. It is
    never a substitute for running one.

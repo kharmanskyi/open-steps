@@ -26,7 +26,7 @@ PAR="${EVAL_PARALLEL:-5}"
 if command -v timeout >/dev/null 2>&1; then LIMIT="timeout 240"
 elif command -v gtimeout >/dev/null 2>&1; then LIMIT="gtimeout 240"
 else LIMIT=""; fi
-# A full sweep is 207 separate agent runs, so it is 207 transcripts. They live
+# A full sweep is 234 separate agent runs, so it is 234 transcripts. They live
 # outside the repository, next to where the pack keeps its reports: one folder
 # per day, every model in it, each file carrying its model in the name. Running
 # one model again replaces that model's files and leaves the rest of the day
