@@ -12,6 +12,7 @@ description: >-
   this.
 allowed-tools:
   - "Read(~/.claude/open-steps/**)"
+  - "Bash(cat ${CLAUDE_SKILL_DIR}/references/premortem-prompt.md)"
 ---
 
 # os-what-could-go-wrong
@@ -87,15 +88,15 @@ quick look at a one-way door is the door.
 Dispatch one general-purpose agent. Its prompt is these four things in order,
 nothing else:
 
-1. the whole text of
-   [`references/premortem-prompt.md`](references/premortem-prompt.md)
+1. the whole analysis prompt - already inlined at the bottom of this skill,
+   under "The analysis prompt, verbatim"
 2. `MODE: Full` or `MODE: Quick`
 3. `LANGUAGE: <the language from above>`
 4. the brief
 
-Never summarise that file or paste part of it. Its rules are what stop the
-answer turning into a list of worries, and the writing rules inside it are the
-only ones that reach the agent at all.
+Copy the inlined prompt exactly. Never summarise it or paste part of it. Its
+rules are what stop the answer turning into a list of worries, and the writing
+rules inside it are the only ones that reach the agent at all.
 
 One agent, not several. Two reports have two verdicts and two candidates for
 the single belief nobody is questioning, and merging them is exactly the
@@ -153,3 +154,14 @@ held.
 - **The user may go ahead against all of it.** That is their decision and they
   now have the early warnings. Note it once, set the tripwires up if they want
   them, and do not re-argue the report.
+
+## The analysis prompt, verbatim
+
+The block below is the whole of
+[`references/premortem-prompt.md`](references/premortem-prompt.md), inlined
+when this skill loads, so no file has to be read at dispatch time. If the
+block shows a literal `cat` command instead of the prompt, this harness does
+not run inline commands: open that file next to this one and use its full
+text.
+
+!`cat ${CLAUDE_SKILL_DIR}/references/premortem-prompt.md`
