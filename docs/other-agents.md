@@ -20,6 +20,14 @@ mkdir -p ~/.agents/skills && cp -R open-steps/skills/os-* ~/.agents/skills/
 
 Copies, so run it again after a `git pull` to update.
 
+One skill carries over worse than the rest. `os-what-could-go-wrong` inlines
+its analysis prompt with a `!` command and hands the attack to a fresh
+subagent, and both are Claude Code behaviours. On these tools the `!` line
+arrives as literal text, and the skill then says to read
+`references/premortem-prompt.md` directly; whether the tool can dispatch a
+fresh agent varies. None of this is verified here - expect this one skill to
+run shallower than the other six.
+
 Linking instead works and updates itself, but it renames the skills. Codex
 resolves a symlink back to the clone and takes the namespace from the folder
 it lands in, so `ln -sfn "$PWD"/open-steps/skills/os-* ~/.agents/skills/`

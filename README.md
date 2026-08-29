@@ -305,7 +305,9 @@ they survive uninstalling the pack.
 And the honest limits. Not every skill has a worked example yet.
 `os-whats-next` and `os-check-work` read project state through `git` and `gh`;
 without those tools, more of the output says "not checked". The writing style
-does not reach subagents.
+does not reach subagents; `os-what-could-go-wrong`, the only skill that
+dispatches one, carries its rules inside the handover instead, so its plain
+language rests on `references/premortem-prompt.md` alone.
 
 ## Open source
 
