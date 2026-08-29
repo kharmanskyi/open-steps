@@ -167,47 +167,52 @@ engineering.
 The pack tells the agent to separate what it measured from what it assumed.
 Same rule for me.
 
-Eighteen phrases a person would actually say, three of them for each of the
-six skills that existed when this pass ran, each asked three times, headless,
-in a working installation, on three Claude models. The question every time: did the right skill switch on by itself?
-Three off-topic questions, each also asked three times, checked the opposite.
+Twenty-one phrases a person would actually say, three per skill, each asked
+three times, headless, in a working installation, on three Claude models. The
+question every time: did the right skill switch on by itself? Three off-topic
+questions, each also asked three times, checked the opposite. Remeasured in
+full on 2026-08-29, the day the seventh skill landed.
 
 ![Activation per skill on Haiku 4.5, Sonnet 5 and Opus 5](assets/activation.svg)
 
 | Skill | Haiku 4.5 | Sonnet 5 | Opus 5 |
 |---|---|---|---|
 | `os-check-work` | 9/9 | 9/9 | 9/9 |
-| `os-done-or-not` | 9/9 | 9/9 | 9/9 |
 | `os-whats-next` | 9/9 | 9/9 | 9/9 |
-| `os-ask-simple` | 8/9 | 7/9 | 9/9 |
-| `os-say-simple` | 5/9 | 9/9 | 9/9 |
-| `os-step-by-step` | 3/9 | 9/9 | 9/9 |
-| **All 18 phrases** | **79%** | **96%** | **100%** |
+| `os-what-could-go-wrong` | 9/9 | 9/9 | 9/9 |
+| `os-ask-simple` | 9/9 | 8/9 | 9/9 |
+| `os-done-or-not` | 9/9 | 7/9 | 9/9 |
+| `os-say-simple` | 6/9 | 9/9 | 9/9 |
+| `os-step-by-step` | 4/9 | 9/9 | 9/9 |
+| **All 21 phrases** | **87%** | **95%** | **100%** |
 | Fired on an off-topic question | 1/9 | 0/9 | 0/9 |
-
-`os-what-could-go-wrong` is missing from that table because it was added after
-the pass and has not been measured. Its three phrases are in
-[`cases.md`](evals/cases.md) waiting for the next run. Not checked is not the
-same as fine, and it is the skill most likely to compete with `os-ask-simple`
-for a phrase.
 
 The honest reading, because the misses matter more than the score.
 
-- On Sonnet 5 and Opus 5 this works. Three skills are perfect on every model.
+- On Sonnet 5 and Opus 5 this works. Three skills are perfect on every model,
+  and Opus missed nothing at all.
+- `os-what-could-go-wrong` was named the skill most likely to steal a phrase
+  from `os-ask-simple`, so that was measured before it merged: 27/27 on its
+  own phrases, `os-ask-simple` did not drop, and off-topic questions still
+  leave it silent. The fear did not survive the measurement.
+- Sonnet 5 dropped two runs of the vaguest phrase ("That's it for today. What
+  happened?") to no skill at all, not to the new one. Asked six more times
+  the same way, it fired six of six. Read the 7/9 as the same run-to-run
+  wobble Haiku shows below; it stays in the table because that is what the
+  pass measured.
 - On Haiku 4.5, two skills are unreliable and one off-topic question wrongly
   pulled in a skill. If you run on the cheapest model, expect to type the
   skill name yourself sometimes.
-- Haiku also moves between runs. An earlier sweep of the same phrases put
-  `os-step-by-step` at 50% where this one puts it at 33%, and put false fires
-  at zero. Three runs per phrase is a smoke test, not a benchmark, and small
-  numbers wobble. I would rather say that than quote the friendlier sweep.
+- Haiku also moves between runs. Three sweeps of the same phrases have put
+  `os-step-by-step` at 50%, 33% and now 44%, and false fires at zero and one.
+  Three runs per phrase is a smoke test, not a benchmark, and small numbers
+  wobble. I would rather say that than quote the friendliest sweep.
 - Where Haiku misses, it usually asks a clarifying question first: told "put
   a secret on the server, tell me what to do", it wants to know which server
   and which secret. That is the pack's own earn-the-ask rule; a one-shot test
   scores it as a miss.
 - The test set is mine, and it is small. Twenty-one phrases in a repository
-  you can read, eighteen of them measured, so write better ones and re-run
-  it.
+  you can read, so write better ones and re-run it.
 
 Two things earlier rounds cost me, kept here because they are the useful part.
 A negation inside a description ("this is NOT the skill for X") is ignored, so

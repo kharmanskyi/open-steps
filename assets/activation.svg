@@ -1,14 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="920" height="584" viewBox="0 0 920 584" font-family="Helvetica, Arial, sans-serif">
-<rect width="920" height="584" fill="#FAF9F5"/>
-<rect x="20" y="20" width="880" height="544" rx="20" fill="#F5F4ED" stroke="#DFDDD4"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="633" viewBox="0 0 920 633" font-family="Helvetica, Arial, sans-serif">
+<rect width="920" height="633" fill="#FAF9F5"/>
+<rect x="20" y="20" width="880" height="593" rx="20" fill="#F5F4ED" stroke="#DFDDD4"/>
 <text x="52" y="64" fill="#1F1E1D" font-size="24" font-weight="700">Did the right skill switch on by itself?</text>
-<text x="52" y="89" fill="#73726C" font-size="14">18 phrases &#183; 3 runs each &#183; headless install &#183; higher is better</text>
+<text x="52" y="89" fill="#73726C" font-size="14">21 phrases &#183; 3 runs each &#183; headless install &#183; higher is better</text>
 <rect x="52.0" y="116" width="261.3" height="64" rx="12" fill="#FFFFFF" stroke="#DFDDD4"/>
 <text x="108.2" y="153.0" fill="#5F5E59" font-size="15" font-weight="700">Haiku 4.5</text>
-<text x="210.2" y="156.0" fill="#1F1E1D" font-size="25" font-weight="700">79%</text>
+<text x="210.2" y="156.0" fill="#1F1E1D" font-size="25" font-weight="700">87%</text>
 <rect x="329.3" y="116" width="261.3" height="64" rx="12" fill="#FFFFFF" stroke="#DFDDD4"/>
 <text x="384.0" y="153.0" fill="#5F5E59" font-size="15" font-weight="700">Sonnet 5</text>
-<text x="489.0" y="156.0" fill="#1F1E1D" font-size="25" font-weight="700">96%</text>
+<text x="489.0" y="156.0" fill="#1F1E1D" font-size="25" font-weight="700">95%</text>
 <rect x="606.7" y="116" width="261.3" height="64" rx="12" fill="#FFFFFF" stroke="#DFDDD4"/>
 <text x="661.8" y="153.0" fill="#5F5E59" font-size="15" font-weight="700">Opus 5</text>
 <text x="750.8" y="156.0" fill="#1F1E1D" font-size="25" font-weight="700">100%</text>
@@ -24,44 +24,52 @@
 <text x="646" y="269.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
 <rect x="765" y="250.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
 <text x="796" y="269.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
-<line x1="52" y1="289" x2="868" y2="289" stroke="#E2E0D8"/>
-<text x="52" y="318.5" fill="#1F1E1D" font-size="14" font-weight="600">os-done-or-not</text>
+<line x1="52" y1="289.0" x2="868" y2="289.0" stroke="#E2E0D8"/>
+<text x="52" y="318.5" fill="#1F1E1D" font-size="14" font-weight="600">os-whats-next</text>
 <rect x="465" y="299.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
 <text x="496" y="318.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
 <rect x="615" y="299.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
 <text x="646" y="318.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
 <rect x="765" y="299.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
 <text x="796" y="318.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
-<line x1="52" y1="338" x2="868" y2="338" stroke="#E2E0D8"/>
-<text x="52" y="367.5" fill="#1F1E1D" font-size="14" font-weight="600">os-whats-next</text>
+<line x1="52" y1="338.0" x2="868" y2="338.0" stroke="#E2E0D8"/>
+<text x="52" y="367.5" fill="#1F1E1D" font-size="14" font-weight="600">os-what-could-go-wrong</text>
 <rect x="465" y="348.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
 <text x="496" y="367.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
 <rect x="615" y="348.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
 <text x="646" y="367.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
 <rect x="765" y="348.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
 <text x="796" y="367.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
-<line x1="52" y1="387" x2="868" y2="387" stroke="#E2E0D8"/>
+<line x1="52" y1="387.0" x2="868" y2="387.0" stroke="#E2E0D8"/>
 <text x="52" y="416.5" fill="#1F1E1D" font-size="14" font-weight="600">os-ask-simple</text>
-<rect x="465" y="397.5" width="62" height="28" rx="14" fill="#C96F50" fill-opacity="0.14"/>
-<text x="496" y="416.1" fill="#C96F50" font-size="13" font-weight="700" text-anchor="middle">8/9</text>
+<rect x="465" y="397.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
+<text x="496" y="416.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
 <rect x="615" y="397.5" width="62" height="28" rx="14" fill="#C96F50" fill-opacity="0.14"/>
-<text x="646" y="416.1" fill="#C96F50" font-size="13" font-weight="700" text-anchor="middle">7/9</text>
+<text x="646" y="416.1" fill="#C96F50" font-size="13" font-weight="700" text-anchor="middle">8/9</text>
 <rect x="765" y="397.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
 <text x="796" y="416.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
-<line x1="52" y1="436" x2="868" y2="436" stroke="#E2E0D8"/>
-<text x="52" y="465.5" fill="#1F1E1D" font-size="14" font-weight="600">os-say-simple</text>
-<rect x="465" y="446.5" width="62" height="28" rx="14" fill="#C96F50" fill-opacity="0.14"/>
-<text x="496" y="465.1" fill="#C96F50" font-size="13" font-weight="700" text-anchor="middle">5/9</text>
-<rect x="615" y="446.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
-<text x="646" y="465.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
+<line x1="52" y1="436.0" x2="868" y2="436.0" stroke="#E2E0D8"/>
+<text x="52" y="465.5" fill="#1F1E1D" font-size="14" font-weight="600">os-done-or-not</text>
+<rect x="465" y="446.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
+<text x="496" y="465.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
+<rect x="615" y="446.5" width="62" height="28" rx="14" fill="#C96F50" fill-opacity="0.14"/>
+<text x="646" y="465.1" fill="#C96F50" font-size="13" font-weight="700" text-anchor="middle">7/9</text>
 <rect x="765" y="446.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
 <text x="796" y="465.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
-<line x1="52" y1="485" x2="868" y2="485" stroke="#E2E0D8"/>
-<text x="52" y="514.5" fill="#1F1E1D" font-size="14" font-weight="600">os-step-by-step</text>
+<line x1="52" y1="485.0" x2="868" y2="485.0" stroke="#E2E0D8"/>
+<text x="52" y="514.5" fill="#1F1E1D" font-size="14" font-weight="600">os-say-simple</text>
 <rect x="465" y="495.5" width="62" height="28" rx="14" fill="#C96F50" fill-opacity="0.14"/>
-<text x="496" y="514.1" fill="#C96F50" font-size="13" font-weight="700" text-anchor="middle">3/9</text>
+<text x="496" y="514.1" fill="#C96F50" font-size="13" font-weight="700" text-anchor="middle">6/9</text>
 <rect x="615" y="495.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
 <text x="646" y="514.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
 <rect x="765" y="495.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
 <text x="796" y="514.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
+<line x1="52" y1="534.0" x2="868" y2="534.0" stroke="#E2E0D8"/>
+<text x="52" y="563.5" fill="#1F1E1D" font-size="14" font-weight="600">os-step-by-step</text>
+<rect x="465" y="544.5" width="62" height="28" rx="14" fill="#C96F50" fill-opacity="0.14"/>
+<text x="496" y="563.1" fill="#C96F50" font-size="13" font-weight="700" text-anchor="middle">4/9</text>
+<rect x="615" y="544.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
+<text x="646" y="563.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
+<rect x="765" y="544.5" width="62" height="28" rx="14" fill="#6A9274" fill-opacity="0.14"/>
+<text x="796" y="563.1" fill="#6A9274" font-size="13" font-weight="700" text-anchor="middle">9/9</text>
 </svg>
