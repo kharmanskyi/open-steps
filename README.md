@@ -183,6 +183,16 @@ it offers to open the queued items as tickets - it shows the list first,
 checks each one against tickets that exist, and creates nothing until you say
 yes.
 
+This is the only skill whose output has to stay fresh, and a stale map is
+worse than no map - the pack says so itself about trackers. So the map is
+built to age out loud. It states the day it was measured on its first line;
+the two columns that come from git are re-measured on every pass and never
+read back out of the file; and the one column nothing can measure, how far a
+feature got, carries the date of the report it came from. Reports stop, and
+the dates stop with them, in the rows themselves rather than in a footnote.
+`os-whats-next` reads those dates too, and says the age out loud when it is
+months behind the newest commit.
+
 ## Numbers
 
 The pack tells the agent to separate what it measured from what it assumed.

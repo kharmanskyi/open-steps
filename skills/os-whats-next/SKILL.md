@@ -58,6 +58,11 @@ Stop as soon as you can answer.
    "Worth retiring" is a real candidate, but it is a decision to put to the
    user, never a task to start.
 
+   That file carries its own age: a measured date at the top and a date beside
+   every stage. Read them, and say the age out loud whenever it is months
+   behind the newest commit - the stages come from session reports, and dates
+   that stopped moving mean the reports stopped, not that the work did.
+
 Say which sources you did not read: an unread source is not an empty source.
 
 ## Step 2 - finish what is finished
@@ -134,7 +139,9 @@ that as the precondition instead of assuming it.
 ## Known gotchas
 
 - Deferred-until-Monday is not a task on Saturday: do not re-propose it early.
-- A stale tracker is worse than none - say when you read it.
+- A stale tracker is worse than none - say when you read it. The same is true
+  of the map, and it hides it better: its measured columns refresh themselves
+  while the stages behind them age.
 - Draft pull requests are yours to finish, not the user's to merge.
 - A quiet feature in the map is not a task. It is quiet because it is
   finished; the skill that wrote it already checked that something still uses

@@ -43,7 +43,10 @@ Two moments, one file.
 
 The fold-in is small on purpose. A report names one or two features; re-running
 the whole census at the end of every session is waste, and it invites the file
-to churn on lines nobody changed.
+to churn on lines nobody changed. The two measured columns are the exception -
+they are re-measured every time, in both moments, because they cost seconds and
+because a stale number that survived a fold-in is indistinguishable from a
+fresh one.
 
 ## Step 1 - find the file, and never clobber it
 
@@ -61,6 +64,13 @@ them is ever touched:
 No markers in an existing file → append the block at the end, leaving their
 text alone. No file → create it with the block. **Never rewrite a line you did
 not write.**
+
+**A stored measurement is not a measurement.** A map that already exists was
+true on the day it was written and has been decaying since. Never read `Last
+worked on` or `Signal` out of the file and repeat them - not in this file, not
+in an answer, not into a ticket. Re-run Steps 2 and 3; git answers in seconds,
+and that is the whole cost of never being wrong about them. The only cells
+carried forward are the ones nothing can measure: `Stage`, and the queue.
 
 ## Step 2 - the census, enumerated and never guessed
 
@@ -166,6 +176,13 @@ came from - and put the choice through `os-ask-simple`. On a yes, create those
 tickets and nothing else. On anything else, the map keeps the items and the
 tracker stays untouched.
 
+**Never propose out of a stale row.** An item may only become a ticket when
+this pass measured what it rests on. A retire candidate needs the wiring check
+run today, not the one in the file; an item that came from a report needs that
+report still to be the newest one. Where you cannot confirm it, leave it in the
+map and say why in the chat. The tracker reaches people who never open this
+file, and that is exactly who a stale row would mislead.
+
 **Write the number back.** Each created ticket's number goes into its row in
 "What is next". That is what stops the same item being proposed again next
 session.
@@ -190,6 +207,9 @@ pass changes the words. It never changes a fact.
 
 ```
 <!-- open-steps:begin -->
+_Measured <date>. Stages are dated where they stand; anything undated in this
+file is not measured._
+
 ## What this is
 
 <Three or four sentences. What the product does, who runs it, what it runs
@@ -199,7 +219,7 @@ on. No jargon - a reader who has never seen the code.>
 
 | Feature | What it does | Stage | Last worked on | Signal |
 |---|---|---|---|---|
-| <plain name> | <one line> | live | 1 Sep | active |
+| <plain name> | <one line> | live (1 Sep) | 1 Sep | active |
 | <plain name> | <one line> | not checked | 28 May | stable |
 
 ## Worth retiring
@@ -212,13 +232,22 @@ result - write "nothing found" and keep the heading.>
 - <item> - <source>
 - <item> - <source> - #<ticket number, once one exists>
 
-_Age and wiring measured <date>. Stage comes from session reports._
+_Age and wiring measured <date>, fresh this pass. Stage comes from session
+reports and is only as current as the date beside it._
 <!-- open-steps:end -->
 ```
 
 `Stage` is one of: `building`, `built - not shipped`, `live`, `retired`, or
 `not checked`. It cannot be read from code, so it comes from the reports, from
 the user, or it says `not checked`.
+
+**And it carries the date it came from, always**: `live (12 Jul)`, not `live`.
+That date is the only thing standing between this file and a confident lie.
+The measured columns are re-measured on every pass and cannot go stale; `Stage`
+can, silently, and the date is what makes the decay visible in the row itself
+rather than in a footnote nobody reads. When the newest date in the column is
+months behind the newest commit, the reports have stopped - say so in the chat,
+in one line. `not checked` never takes a date.
 
 ## Hard rules - these rules *are* the skill
 
@@ -241,6 +270,13 @@ the user, or it says `not checked`.
    is not, and no ticket is ever closed, edited or reordered by this skill.
 10. **The plain-words pass never touches a measured cell.** Prose is rewritten,
     `Stage`, `Signal`, dates and ticket numbers are copied exactly.
+11. **Re-measure, never quote.** `Last worked on` and `Signal` are measured on
+    every pass, including the small fold-in. A number read back out of the file
+    is a number about the past wearing today's date.
+12. **Every claim carries its date or says it has none.** `Stage` is dated;
+    `not checked` is honest. A map that cannot go visibly stale will go
+    invisibly stale, and this pack's own rule is that a stale map is worse
+    than no map.
 
 ## Known gotchas
 
@@ -264,6 +300,10 @@ the user, or it says `not checked`.
   it in one line and never turn it into a recommendation to adopt one.
 - **Plain words are not fewer facts.** A shorter "Worth retiring" line that
   drops what would break is worse than the long one.
+- **The reports stopping does not stop the map.** The measured half keeps
+  refreshing itself and looks healthy, while `Stage` quietly ages behind it.
+  That is the failure this file is most likely to have: half-fresh, and
+  therefore trusted whole. The dates in the `Stage` column are the only cure.
 - **The map going quiet is itself a signal** - a `Stage` column that is all
   `not checked` means the reports are not being written, not that the product
   is unknowable. Say so.
