@@ -59,9 +59,13 @@ Stop as soon as you can answer.
    user, never a task to start.
 
    That file carries its own age: a measured date at the top and a date beside
-   every stage. Read them, and say the age out loud whenever it is months
-   behind the newest commit - the stages come from session reports, and dates
-   that stopped moving mean the reports stopped, not that the work did.
+   every stage. Never take a number out of it. The two columns that come from
+   git - when a part was last worked on, and whether anything still reaches it
+   - you measure yourself, here, before using them; it is two commands and it
+   is the difference between a current answer and a confident old one. The
+   stages you cannot measure: use the dates beside them, and say the age out
+   loud whenever it is months behind the newest commit. Dates that stopped
+   moving mean the reports stopped, not that the work did.
 
 Say which sources you did not read: an unread source is not an empty source.
 

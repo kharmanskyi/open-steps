@@ -15,6 +15,7 @@ description: >-
 allowed-tools:
   - "Read(~/.claude/open-steps/**)"
   - "Edit(ROADMAP.md)"
+  - "Bash(git rev-parse --git-dir)"
   - "Bash(gh repo view *)"
   - "Bash(gh issue list *)"
   - "Bash(gh issue create *)"
@@ -43,10 +44,14 @@ Two moments, one file.
 
 The fold-in is small on purpose. A report names one or two features; re-running
 the whole census at the end of every session is waste, and it invites the file
-to churn on lines nobody changed. The two measured columns are the exception -
-they are re-measured every time, in both moments, because they cost seconds and
-because a stale number that survived a fold-in is indistinguishable from a
-fresh one.
+to churn on lines nobody changed.
+
+The two measured columns are the exception, and this is the rule that keeps the
+file honest: **they are re-measured on every fold-in, whether or not anything
+else changed.** A session that fixed a bug in a finished feature moves no row -
+and that is exactly the session after which the dates would silently be a day
+older than they claim. Measuring costs seconds and needs no reason. Only the
+top date and the two columns move on such a pass; nothing else is rewritten.
 
 ## Step 1 - find the file, and never clobber it
 
@@ -64,6 +69,25 @@ them is ever touched:
 No markers in an existing file → append the block at the end, leaving their
 text alone. No file → create it with the block. **Never rewrite a line you did
 not write.**
+
+**Keep it out of the repository unless somebody put it there.** The map is a
+working note about the project, not part of the product, and it should never
+ride into a commit on the back of a `git add -A`. On the pass that creates the
+file, add it to this clone's own ignore list - never to `.gitignore`, which
+belongs to the whole team:
+
+```bash
+git check-ignore -q ROADMAP.md || git ls-files --error-unmatch ROADMAP.md \
+  >/dev/null 2>&1 || \
+  grep -qxF 'ROADMAP.md' "$(git rev-parse --git-dir)/info/exclude" 2>/dev/null || \
+  printf 'ROADMAP.md\n' >> "$(git rev-parse --git-dir)/info/exclude"
+```
+
+Three conditions, and each one is a reason to leave it alone: something already
+ignores it, the file is tracked in git because somebody chose to commit it, or
+the line is already there. Say in one line that you did it, so the user can put
+the file back into git if they want it shared - `git add -f ROADMAP.md` is all
+it takes.
 
 **A stored measurement is not a measurement.** A map that already exists was
 true on the day it was written and has been decaying since. Never read `Last
@@ -300,6 +324,9 @@ in one line. `not checked` never takes a date.
   it in one line and never turn it into a recommendation to adopt one.
 - **Plain words are not fewer facts.** A shorter "Worth retiring" line that
   drops what would break is worse than the long one.
+- **A tracked map stays tracked.** If the file is already committed, somebody
+  chose that. Never remove it from git, never add it to `.gitignore`, and say
+  once that the map is in the repository and its edits will show up in diffs.
 - **The reports stopping does not stop the map.** The measured half keeps
   refreshing itself and looks healthy, while `Stage` quietly ages behind it.
   That is the failure this file is most likely to have: half-fresh, and

@@ -119,10 +119,11 @@ the product, and this is the moment it goes out of date. Use the
 `os-whats-built` skill to update only the rows this session touched - a new
 feature, a stage that moved, a deferred item joining the backlog.
 
-Skip it in three cases: outcome 8, no `ROADMAP.md` and the user has never
-asked for one, or nothing in the report changes a row. The map is not a second
-copy of the report; a session that fixed a bug in a shipped feature usually
-moves nothing.
+Skip it in two cases only: outcome 8, or no `ROADMAP.md` and the user has never
+asked for one. A session that changed no row is **not** a third case - the map
+is not a second copy of the report, but its measured columns went a day stale
+while this session ran, and that pass is what refreshes them. The map is not
+skipped for having nothing to say; it is skipped for not existing.
 
 ## Jargon → plain words
 

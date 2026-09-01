@@ -190,8 +190,18 @@ the two columns that come from git are re-measured on every pass and never
 read back out of the file; and the one column nothing can measure, how far a
 feature got, carries the date of the report it came from. Reports stop, and
 the dates stop with them, in the rows themselves rather than in a footnote.
-`os-whats-next` reads those dates too, and says the age out loud when it is
-months behind the newest commit.
+`os-whats-next` does not read the git numbers out of the file at all - it
+measures them again for itself - and says the age of the stages out loud when
+they fall months behind the newest commit. The refresh happens on every
+fold-in, including the sessions that change no row, because those are exactly
+the sessions after which the file would quietly be a day older than it claims.
+
+The map is a working note, not part of the product, so it is kept out of the
+repository: on the pass that creates it, the file goes into that clone's own
+`.git/info/exclude` - never into the shared `.gitignore` - so no `git add -A`
+can sweep it into a commit. Want it shared with your team instead?
+`git add -f ROADMAP.md` once, and the skill leaves a tracked map alone from
+then on.
 
 ## Numbers
 
