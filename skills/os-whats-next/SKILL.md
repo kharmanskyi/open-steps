@@ -51,6 +51,13 @@ Stop as soon as you can answer.
    `ROADMAP.md`, `PLAN.md`, `TODO.md`, `docs/plan*`. Next work comes from the
    backlog, not from imagination. No backlog anywhere → say so.
 
+   Where `os-whats-built` keeps that file, **only the "What is next" section
+   is the backlog.** The feature table above it is an inventory, and a row
+   that has not changed in months is a finished feature, not a task. Reading
+   work out of it is inventing work, which rule 4 below forbids. A row under
+   "Worth retiring" is a real candidate, but it is a decision to put to the
+   user, never a task to start.
+
 Say which sources you did not read: an unread source is not an empty source.
 
 ## Step 2 - finish what is finished
@@ -129,6 +136,9 @@ that as the precondition instead of assuming it.
 - Deferred-until-Monday is not a task on Saturday: do not re-propose it early.
 - A stale tracker is worse than none - say when you read it.
 - Draft pull requests are yours to finish, not the user's to merge.
+- A quiet feature in the map is not a task. It is quiet because it is
+  finished; the skill that wrote it already checked that something still uses
+  it.
 - A needs-you pick goes to `os-step-by-step`, never explained inline.
 - "Ready to merge" is still a claim: the verify step is what makes it true -
   skipping it to move faster is how wrong work lands.
