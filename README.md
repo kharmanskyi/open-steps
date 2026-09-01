@@ -162,7 +162,7 @@ read: [`docs/other-agents.md`](docs/other-agents.md).
 | [`os-whats-next`](skills/os-whats-next/) | Merges what is verified and ready, then recommends the next task and says why in plain words | You ask what is left or what to do next |
 | [`os-check-work`](skills/os-check-work/) | Does not trust another session's report. Checks every claim against what actually happened, then says what to do about it | Another session says it is done |
 | [`os-say-simple`](skills/os-say-simple/) | Rewrites any text in plain words without losing facts or bad news. Give it a number and you get exactly that many points | Any text reads like engineering: a report, a comment, an error, the agent's own answer |
-| [`os-whats-built`](skills/os-whats-built/) | Keeps one `ROADMAP.md`: what the product is, every feature with how far it got, which parts nobody uses any more, and what is queued | You ask what is in the project, or a session report was just written |
+| [`os-whats-built`](skills/os-whats-built/) | Keeps one `ROADMAP.md`: what the product is, every feature with how far it got, which parts nobody uses any more, and what is queued - and offers to open the queue as tickets in a tracker you already use | You ask what is in the project, or a session report was just written |
 
 They work as a loop: `os-whats-next` picks the work, `os-step-by-step` walks
 you through your part, `os-done-or-not` reports the result, `os-check-work`
@@ -178,7 +178,10 @@ to break: `os-whats-next` is told to read the backlog **always**, and until
 now nothing in the pack ever wrote one. Two things it will not do - invent a
 task, or delete anything. It measures how old each part is and whether
 anything still reaches it, and quiet code that is still used is reported as
-finished, not as rot.
+finished, not as rot. Where the project already has a task tracker connected,
+it offers to open the queued items as tickets - it shows the list first,
+checks each one against tickets that exist, and creates nothing until you say
+yes.
 
 ## Numbers
 

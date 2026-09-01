@@ -9,10 +9,15 @@ description: >-
   ROADMAP.md: a plain-language description of the product, every feature with
   how far it got, which parts nobody has touched, and what is queued next. Age
   and wiring are measured from git; how far a feature got comes from the
-  reports or says "not checked". Never invents work and never deletes code.
+  reports or says "not checked". Where the project has a task tracker already
+  connected, the skill offers to open the queued items as tickets and creates
+  them only after the user says yes. Never invents work and never deletes code.
 allowed-tools:
   - "Read(~/.claude/open-steps/**)"
   - "Edit(ROADMAP.md)"
+  - "Bash(gh repo view *)"
+  - "Bash(gh issue list *)"
+  - "Bash(gh issue create *)"
 ---
 
 # os-whats-built
@@ -123,6 +128,64 @@ tasks. Neither do you. Every item names where it came from:
 Nothing else. A gap you noticed while reading the code is not a task; if it
 matters, say it in the chat and let the user decide.
 
+## Step 5 - the tracker, if there is one
+
+The map holds the queue. A team that runs on a tracker will not read the map,
+so the queue has to reach them where they already look. This step is an offer,
+never an action taken quietly.
+
+**Find it, never install it.** Cheapest first, and stop at the first hit:
+
+```bash
+gh repo view --json hasIssuesEnabled -q .hasIssuesEnabled   # GitHub Issues
+```
+
+Then a tracker already connected to this session - Linear, Notion, Jira,
+whatever is available without asking anyone to set something up. Nothing
+connected is a normal answer: write one line under "What is next" saying this
+file is the tracker, and go to Step 6. Never suggest connecting one.
+
+**Only queued items with a source.** Take the "What is next" rows from Step 4.
+Nothing else in the map goes to a tracker - a `stable` feature is not a task,
+and a retire candidate is a sentence for the user, not a ticket for a team.
+
+**Search before you propose.** For each item, look for a ticket that already
+covers it, open or closed:
+
+```bash
+gh issue list --search '<a few words from the item>' --state all \
+  --json number,title,state
+```
+
+A duplicate ticket is the way this step fails. When the search is unavailable
+or returns nothing usable, say the search did not run - never treat silence as
+proof the ticket is missing.
+
+**Ask, then create.** Show what is left as plain lines - what it is, where it
+came from - and put the choice through `os-ask-simple`. On a yes, create those
+tickets and nothing else. On anything else, the map keeps the items and the
+tracker stays untouched.
+
+**Write the number back.** Each created ticket's number goes into its row in
+"What is next". That is what stops the same item being proposed again next
+session.
+
+## Step 6 - plain words, before it is written
+
+The map is read by the person who pays for the work, not by the person who
+wrote it. Before the block goes into the file, put every sentence in it
+through the `os-say-simple` rules: one sentence one idea, active voice, short
+sentences, one word for one thing, no synonym rotation.
+
+That covers the "What this is" paragraph, the "What it does" column, the
+"Worth retiring" lines and the backlog items. It does not cover the measured
+cells - `Stage`, `Signal`, `Last worked on`, ticket numbers and the dated
+footer are exact strings and are copied, never reworded.
+
+`os-say-simple`'s own hard rules carry over whole: add nothing, drop no bad
+news, numbers and dates stay exact, a claim from a report stays a claim. This
+pass changes the words. It never changes a fact.
+
 ## The shape
 
 ```
@@ -147,6 +210,7 @@ result - write "nothing found" and keep the heading.>
 ## What is next
 
 - <item> - <source>
+- <item> - <source> - #<ticket number, once one exists>
 
 _Age and wiring measured <date>. Stage comes from session reports._
 <!-- open-steps:end -->
@@ -172,6 +236,11 @@ the user, or it says `not checked`.
    folder is spelled. Paths belong in the technical detail of a report.
 8. **One screen per section.** Twelve features and the map is a wall of text -
    group them and say you grouped them.
+9. **A ticket is created only after an explicit yes.** Rule 6 covers the code;
+   this covers everyone else's inbox. Searching a tracker is free, filling one
+   is not, and no ticket is ever closed, edited or reordered by this skill.
+10. **The plain-words pass never touches a measured cell.** Prose is rewritten,
+    `Stage`, `Signal`, dates and ticket numbers are copied exactly.
 
 ## Known gotchas
 
@@ -186,6 +255,15 @@ the user, or it says `not checked`.
   on the day it moved.
 - **A monorepo is not one product.** Several deployables → group the map by
   deployable, or the "what this is" paragraph becomes a lie of averages.
+- **The same item proposed twice.** A ticket whose number never made it back
+  into the row will be offered again next session, and the team gets two.
+  Write the number back in the same pass that creates the ticket.
+- **A closed ticket is still a match.** Search `--state all`. An item someone
+  already did and closed should leave the map, not reopen as a new ticket.
+- **No tracker is not a fault.** Plenty of projects run on the map alone. Say
+  it in one line and never turn it into a recommendation to adopt one.
+- **Plain words are not fewer facts.** A shorter "Worth retiring" line that
+  drops what would break is worse than the long one.
 - **The map going quiet is itself a signal** - a `Stage` column that is all
   `not checked` means the reports are not being written, not that the product
   is unknowable. Say so.
