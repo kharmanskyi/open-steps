@@ -33,6 +33,7 @@ These moments require a skill. Invoke it rather than improvising the answer.
 - I ask about other sessions, or to accept work one of them finished -> os-check-work
 - Work is finished, or I ask how it went -> os-done-or-not
 - I say I did not understand, ask for simpler or shorter, or paste text asking what it means -> os-say-simple
+- I ask what is in the project, what we have built, or what has gone stale -> os-whats-built
 
 Never offer options without naming a recommendation.
 ROUTING

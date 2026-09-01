@@ -112,6 +112,18 @@ home for engineering identifiers.
 
 Terse, factual, a handover note; nothing changed → omit part two.
 
+## Step 5 - fold it into the map
+
+The report describes one session. `ROADMAP.md` holds the standing picture of
+the product, and this is the moment it goes out of date. Use the
+`os-whats-built` skill to update only the rows this session touched - a new
+feature, a stage that moved, a deferred item joining the backlog.
+
+Skip it in three cases: outcome 8, no `ROADMAP.md` and the user has never
+asked for one, or nothing in the report changes a row. The map is not a second
+copy of the report; a session that fixed a bug in a shipped feature usually
+moves nothing.
+
 ## Jargon → plain words
 
 Examples of the move - apply it in the user's language. A ticket or PR number

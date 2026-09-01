@@ -99,6 +99,18 @@ printf '{"session_id":"S9","cwd":"%s","transcript_path":null,"model":"gpt-5","pe
   | HOME="$H" bash "$PACK/hooks/stop-report.sh" 2>/dev/null
 check "the session id is still found" 2 $?
 
+echo "CASE 10  the map this pack writes into the project"
+# os-whats-built writes ROADMAP.md inside the repository, unlike reports. If
+# the fingerprint counted it, the agent would be asked for a report about the
+# file it just wrote, once the cooldown expired. The second assertion is the
+# one that matters: excluding it must not swallow real work landing alongside.
+H="$(mktemp -d)"; newrepo
+start S10
+echo "the map" > ROADMAP.md
+stop S10; check "the map alone is not work" 0 $?
+echo change >> a.txt
+stop S10; check "real work alongside it still asks" 2 $?
+
 echo
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]

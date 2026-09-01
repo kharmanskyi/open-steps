@@ -35,6 +35,9 @@ that exact skill switched on by itself, with nobody naming it.
 | os-what-could-go-wrong | We are about to sign a three-year office lease with no break clause. What could go wrong? |
 | os-what-could-go-wrong | Before we migrate the database this Saturday, poke holes in the plan: one four-hour window, 50 million rows, and rollback is repointing back. |
 | os-what-could-go-wrong | We have decided to raise prices 20% for existing customers next month. Do a premortem on it, what are we missing? |
+| os-whats-built | What have we actually built here? Give me the whole picture of this project. |
+| os-whats-built | Map this project for me - what is in it, and what is nobody using any more? |
+| os-whats-built | Update the roadmap please, and tell me which parts have gone stale. |
 
 ## Should not fire
 

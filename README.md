@@ -162,6 +162,7 @@ read: [`docs/other-agents.md`](docs/other-agents.md).
 | [`os-whats-next`](skills/os-whats-next/) | Merges what is verified and ready, then recommends the next task and says why in plain words | You ask what is left or what to do next |
 | [`os-check-work`](skills/os-check-work/) | Does not trust another session's report. Checks every claim against what actually happened, then says what to do about it | Another session says it is done |
 | [`os-say-simple`](skills/os-say-simple/) | Rewrites any text in plain words without losing facts or bad news. Give it a number and you get exactly that many points | Any text reads like engineering: a report, a comment, an error, the agent's own answer |
+| [`os-whats-built`](skills/os-whats-built/) | Keeps one `ROADMAP.md`: what the product is, every feature with how far it got, which parts nobody uses any more, and what is queued | You ask what is in the project, or a session report was just written |
 
 They work as a loop: `os-whats-next` picks the work, `os-step-by-step` walks
 you through your part, `os-done-or-not` reports the result, `os-check-work`
@@ -169,6 +170,15 @@ accepts what other sessions did, `os-ask-simple` handles the questions on the
 way, `os-what-could-go-wrong` attacks anything hard to undo before it is
 agreed, and `os-say-simple` rescues any text that still reads like
 engineering.
+
+`os-whats-built` is the one that is not session-shaped. Everything else
+describes a session; it keeps the standing picture of the product, in a
+`ROADMAP.md` in the project itself. That closes the loop at the point it used
+to break: `os-whats-next` is told to read the backlog **always**, and until
+now nothing in the pack ever wrote one. Two things it will not do - invent a
+task, or delete anything. It measures how old each part is and whether
+anything still reaches it, and quiet code that is still used is reported as
+finished, not as rot.
 
 ## Numbers
 
@@ -180,6 +190,12 @@ three times, headless, in a working installation, on three Claude models. The
 question every time: did the right skill switch on by itself? Three off-topic
 questions, each also asked three times, checked the opposite. Remeasured in
 full on 2026-08-29, the day the seventh skill landed.
+
+`os-whats-built` is **not in these numbers.** Its three phrases are in
+`cases.md`, but the sweep has not been re-run since it landed, so its
+activation is unmeasured - and it is the skill most likely to take a phrase
+from `os-whats-next`, since both answer a question about the project as a
+whole. Run `bash evals/run.sh` before trusting either number.
 
 ![Activation per skill on Haiku 4.5, Sonnet 5 and Opus 5](assets/activation.svg)
 
@@ -219,8 +235,9 @@ The honest reading, because the misses matter more than the score.
   a secret on the server, tell me what to do", it wants to know which server
   and which secret. That is the pack's own earn-the-ask rule; a one-shot test
   scores it as a miss.
-- The test set is mine, and it is small. Twenty-one phrases in a repository
-  you can read, so write better ones and re-run it.
+- The test set is mine, and it is small. Twenty-four phrases in a repository
+  you can read - the twenty-one scored above, plus three that have not been
+  run yet - so write better ones and re-run it.
 
 Two things earlier rounds cost me, kept here because they are the useful part.
 A negation inside a description ("this is NOT the skill for X") is ignored, so

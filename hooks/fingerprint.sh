@@ -34,6 +34,12 @@ os_find_repos() { # sets OS_REPOS, OS_SCOPE
   done
 }
 
+# Files this pack writes into the project itself. They are excluded from the
+# fingerprint for the same reason reports live outside the repository: writing
+# one must never look like work landing, or the map the agent just updated
+# asks for a report about itself once the cooldown expires.
+OS_SELF_WRITTEN=(':(exclude)ROADMAP.md')
+
 # HEAD plus dirty-file content per repository. Content, not just names:
 # `git status --porcelain` alone cannot see a file edited twice.
 os_fingerprint() { # sets OS_FINGERPRINT, OS_HEADS, OS_DIRTY, OS_CHANGED
@@ -42,10 +48,10 @@ os_fingerprint() { # sets OS_FINGERPRINT, OS_HEADS, OS_DIRTY, OS_CHANGED
   local parts="" r head dirty n content
   for r in "${OS_REPOS[@]}"; do
     head="$(git -C "$r" rev-parse HEAD 2>/dev/null || echo none)"
-    dirty="$(git -C "$r" status --porcelain 2>/dev/null || true)"
+    dirty="$(git -C "$r" status --porcelain -- . "${OS_SELF_WRITTEN[@]}" 2>/dev/null || true)"
     n="$(printf '%s' "$dirty" | grep -c . || true)"
     : "${n:=0}"
-    content="$(git -C "$r" diff HEAD 2>/dev/null || true)"
+    content="$(git -C "$r" diff HEAD -- . "${OS_SELF_WRITTEN[@]}" 2>/dev/null || true)"
     parts="$parts|$r:$head:$(printf '%s\n%s' "$dirty" "$content" | cksum | tr -d ' ')"
     OS_DIRTY=$((OS_DIRTY + n))
     [ "$n" -gt 0 ] && OS_CHANGED="$OS_CHANGED $(basename "$r")"
