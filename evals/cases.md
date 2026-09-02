@@ -9,14 +9,21 @@ One rule if you edit the tables: no `|` inside a phrase, it splits the cell.
 
 ## Should fire
 
-Three phrases per skill, each asked three times. It counts as a hit only when
-that exact skill switched on by itself, with nobody naming it.
+Three phrases per skill, each asked three times, and four for
+`os-done-or-not`. It counts as a hit only when that exact skill switched on by
+itself, with nobody naming it.
+
+The fourth `os-done-or-not` row is a boundary, not a phrase somebody asked
+for. In a ticket session "status" means the session's own status, so
+`os-big-picture` answering it is a miss on this row - which is the only way to
+prove the two skills stay apart rather than assert it.
 
 | Skill | Phrase |
 |---|---|
 | os-done-or-not | The work is finished, are we done? Give me the report. |
 | os-done-or-not | That's it for today. What happened? |
 | os-done-or-not | Report, please. How did the session go? |
+| os-done-or-not | We just finished the changes on this ticket. What's the status? |
 | os-whats-next | What's next? What should we pick up now? |
 | os-whats-next | What is left to do, anything I can pick up? |
 | os-whats-next | What should we work on next? |
@@ -35,9 +42,9 @@ that exact skill switched on by itself, with nobody naming it.
 | os-what-could-go-wrong | We are about to sign a three-year office lease with no break clause. What could go wrong? |
 | os-what-could-go-wrong | Before we migrate the database this Saturday, poke holes in the plan: one four-hour window, 50 million rows, and rollback is repointing back. |
 | os-what-could-go-wrong | We have decided to raise prices 20% for existing customers next month. Do a premortem on it, what are we missing? |
-| os-whats-built | What have we actually built here? Give me the whole picture of this project. |
-| os-whats-built | Map this project for me - what is in it, and what is nobody using any more? |
-| os-whats-built | Update the roadmap please, and tell me which parts have gone stale. |
+| os-big-picture | What have we actually built here? Give me the whole picture of this project. |
+| os-big-picture | Map this project for me - what is in it, and what is nobody using any more? |
+| os-big-picture | What's the status of the project overall - where are we? |
 
 ## Should not fire
 

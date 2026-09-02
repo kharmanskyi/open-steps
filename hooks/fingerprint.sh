@@ -38,7 +38,7 @@ os_find_repos() { # sets OS_REPOS, OS_SCOPE
 # fingerprint for the same reason reports live outside the repository: writing
 # one must never look like work landing, or the map the agent just updated
 # asks for a report about itself once the cooldown expires.
-OS_SELF_WRITTEN=(':(exclude)ROADMAP.md')
+OS_SELF_WRITTEN=(':(exclude)BIG-PICTURE.md')
 
 # HEAD plus dirty-file content per repository. Content, not just names:
 # `git status --porcelain` alone cannot see a file edited twice.

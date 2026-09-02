@@ -31,9 +31,9 @@ These moments require a skill. Invoke it rather than improvising the answer.
 - Any message where you ask me to do something (run a command, paste a value,
   approve, choose, test on a device) -> os-step-by-step
 - I ask about other sessions, or to accept work one of them finished -> os-check-work
-- Work is finished, or I ask how it went -> os-done-or-not
+- Work is finished, I ask how it went, or I ask the status of this ticket -> os-done-or-not
 - I say I did not understand, ask for simpler or shorter, or paste text asking what it means -> os-say-simple
-- I ask what is in the project, what we have built, or what has gone stale -> os-whats-built
+- I ask where we are, what is in the project, or what has gone stale -> os-big-picture
 
 Never offer options without naming a recommendation.
 ROUTING

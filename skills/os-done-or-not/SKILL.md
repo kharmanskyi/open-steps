@@ -2,7 +2,8 @@
 name: os-done-or-not
 description: >-
   ALWAYS invoke this skill when work wraps up or the user asks how it went -
-  "done or not", "are we done", "what happened", "report" - in any language,
+  "done or not", "are we done", "what happened", "report", "what's the status
+  of this ticket" - in any language,
   and when a Stop hook asks for a session report. Produces a ten-line plain-
   language report: a lead, a checkmark table, and a verdict - fully done,
   anything needed from you, new debt, safe to close. Every "yes" names its
@@ -114,13 +115,13 @@ Terse, factual, a handover note; nothing changed → omit part two.
 
 ## Step 5 - fold it into the map
 
-The report describes one session. `ROADMAP.md` holds the standing picture of
-the product, and this is the moment it goes out of date. Use the
-`os-whats-built` skill to update only the rows this session touched - a new
+The report describes one session. `BIG-PICTURE.md` holds the standing picture
+of the product, and this is the moment it goes out of date. Use the
+`os-big-picture` skill to update only the rows this session touched - a new
 feature, a stage that moved, a deferred item joining the backlog.
 
-Skip it in two cases only: outcome 8, or no `ROADMAP.md` and the user has never
-asked for one. A session that changed no row is **not** a third case - the map
+Skip it in two cases only: outcome 8, or no `BIG-PICTURE.md` and the user has
+never asked for one. A session that changed no row is **not** a third case - the map
 is not a second copy of the report, but its measured columns went a day stale
 while this session ran, and that pass is what refreshes them. The map is not
 skipped for having nothing to say; it is skipped for not existing.

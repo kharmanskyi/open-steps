@@ -48,10 +48,10 @@ Stop as soon as you can answer.
    `gh pr list --json number,title,mergeStateStatus,reviewDecision,isDraft`.
 4. **The backlog - always.** The issue tracker when one is already connected
    (never authenticate or install one), otherwise task files in the repo:
-   `ROADMAP.md`, `PLAN.md`, `TODO.md`, `docs/plan*`. Next work comes from the
-   backlog, not from imagination. No backlog anywhere → say so.
+   `BIG-PICTURE.md`, `PLAN.md`, `TODO.md`, `docs/plan*`. Next work comes from
+   the backlog, not from imagination. No backlog anywhere → say so.
 
-   Where `os-whats-built` keeps that file, **only the "What is next" section
+   Where `os-big-picture` keeps that file, **only the "What is next" section
    is the backlog.** The feature table above it is an inventory, and a row
    that has not changed in months is a finished feature, not a task. Reading
    work out of it is inventing work, which rule 4 below forbids. A row under
