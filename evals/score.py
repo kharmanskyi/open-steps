@@ -54,7 +54,14 @@ def stream_model(path):
 def skill_calls(path):
     out = []
     for d in events(path):
-        for b in (d.get("message") or {}).get("content") or []:
+        # A denied tool call is a system event whose "message" is a sentence,
+        # not an object: {"subtype": "permission_denied", "tool_name": "Skill",
+        # "message": "Execute skill: ..."}. Reading .content off a string
+        # raises, and one such line ends the whole day's scoring.
+        msg = d.get("message")
+        if not isinstance(msg, dict):
+            continue
+        for b in msg.get("content") or []:
             if isinstance(b, dict) and b.get("type") == "tool_use" and b.get("name") == "Skill":
                 # A plugin install invokes a skill as `open-steps:os-done-or-not`;
                 # a folder install says `os-done-or-not`. Score the name, not the

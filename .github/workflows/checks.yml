@@ -26,7 +26,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v7
-      # Ten scenarios, in throwaway repositories with a throwaway home
+      # Twelve scenarios, in throwaway repositories with a throwaway home
       # directory. Needs no git identity and touches nothing outside them.
       - run: bash hooks/test.sh
 

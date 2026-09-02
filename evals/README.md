@@ -110,6 +110,13 @@ We found all three by running it, not by reading about it.
   per shape the scorer must handle, short enough to read. They exist to show
   the scorer failing and then passing on a shape that bit once; nothing in
   them was said by a model, and they never feed `results.md`.
+- **A denied tool call is a system event whose `message` is a sentence, not an
+  object.** Headless runs get no permission prompt, so every `Skill` call in a
+  sweep is denied and every stream carries these lines. Reading `.content` off
+  one raised, and a single such line ended the whole day's scoring. The model
+  still chose the skill, so activation is unaffected - but the quality arm is:
+  with the pack's skills denied, the `with` arm is running unaided too, and
+  those columns say nothing at all until a run permits them.
 - `claude -p --bare` skips the login on purpose and cannot sign in.
 - Pointing the tool at an empty home folder signs it out too.
 - macOS ships an old bash, version 3.2. In that version one empty list in the
