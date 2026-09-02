@@ -117,6 +117,14 @@ We found all three by running it, not by reading about it.
   still chose the skill, so activation is unaffected - but the quality arm is:
   with the pack's skills denied, the `with` arm is running unaided too, and
   those columns say nothing at all until a run permits them.
+- **The `os-check-work` phrases reach real sessions.** `run.sh` gives each run
+  a throwaway repository, but not a throwaway session namespace: a run asked
+  "how are the other sessions doing?" lists the live Claude sessions on the
+  machine and messages them. In one pass three of them pinged the session that
+  had launched the sweep, and one pinged an unrelated session busy with
+  somebody else's project. Nothing was written and nothing broke, but the runs
+  are not sealed off, and a person watching their own session will see the
+  interruptions. Run a sweep when you can afford that.
 - `claude -p --bare` skips the login on purpose and cannot sign in.
 - Pointing the tool at an empty home folder signs it out too.
 - macOS ships an old bash, version 3.2. In that version one empty list in the
