@@ -48,8 +48,24 @@ Stop as soon as you can answer.
    `gh pr list --json number,title,mergeStateStatus,reviewDecision,isDraft`.
 4. **The backlog - always.** The issue tracker when one is already connected
    (never authenticate or install one), otherwise task files in the repo:
-   `ROADMAP.md`, `PLAN.md`, `TODO.md`, `docs/plan*`. Next work comes from the
-   backlog, not from imagination. No backlog anywhere → say so.
+   `BIG-PICTURE.md`, `PLAN.md`, `TODO.md`, `docs/plan*`. Next work comes from
+   the backlog, not from imagination. No backlog anywhere → say so.
+
+   Where `os-big-picture` keeps that file, **only the "What is next" section
+   is the backlog.** The feature table above it is an inventory, and a row
+   that has not changed in months is a finished feature, not a task. Reading
+   work out of it is inventing work, which rule 4 below forbids. A row under
+   "Worth retiring" is a real candidate, but it is a decision to put to the
+   user, never a task to start.
+
+   That file carries its own age: a measured date at the top and a date beside
+   every stage. Never take a number out of it. The two columns that come from
+   git - when a part was last worked on, and whether anything still reaches it
+   - you measure yourself, here, before using them; it is two commands and it
+   is the difference between a current answer and a confident old one. The
+   stages you cannot measure: use the dates beside them, and say the age out
+   loud whenever it is months behind the newest commit. Dates that stopped
+   moving mean the reports stopped, not that the work did.
 
 Say which sources you did not read: an unread source is not an empty source.
 
@@ -127,8 +143,13 @@ that as the precondition instead of assuming it.
 ## Known gotchas
 
 - Deferred-until-Monday is not a task on Saturday: do not re-propose it early.
-- A stale tracker is worse than none - say when you read it.
+- A stale tracker is worse than none - say when you read it. The same is true
+  of the map, and it hides it better: its measured columns refresh themselves
+  while the stages behind them age.
 - Draft pull requests are yours to finish, not the user's to merge.
+- A quiet feature in the map is not a task. It is quiet because it is
+  finished; the skill that wrote it already checked that something still uses
+  it.
 - A needs-you pick goes to `os-step-by-step`, never explained inline.
 - "Ready to merge" is still a claim: the verify step is what makes it true -
   skipping it to move faster is how wrong work lands.

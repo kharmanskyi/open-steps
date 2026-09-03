@@ -99,6 +99,78 @@ printf '{"session_id":"S9","cwd":"%s","transcript_path":null,"model":"gpt-5","pe
   | HOME="$H" bash "$PACK/hooks/stop-report.sh" 2>/dev/null
 check "the session id is still found" 2 $?
 
+echo "CASE 10  the map this pack writes into the project"
+# os-big-picture writes BIG-PICTURE.md inside the repository, unlike reports. If
+# the fingerprint counted it, the agent would be asked for a report about the
+# file it just wrote, once the cooldown expired. The second assertion is the
+# one that matters: excluding it must not swallow real work landing alongside.
+H="$(mktemp -d)"; newrepo
+start S10
+echo "the map" > BIG-PICTURE.md
+stop S10; check "the map alone is not work" 0 $?
+echo change >> a.txt
+stop S10; check "real work alongside it still asks" 2 $?
+
+echo "CASE 11  the census the map is measured from"
+# scripts/census.sh is the whole measured half of os-big-picture, so the two
+# signals are worth a real repository rather than a promise in prose. Three
+# parts with forged commit dates: one touched last week, one untouched for
+# eight months that nothing mentions, one untouched for eight months that the
+# build script does. Two-sided like CASE 10: the quiet-and-unused part must be
+# named, and the quiet-but-wired part must not be, or the map recommends
+# deleting a working product.
+H="$(mktemp -d)"; W="$(mktemp -d)"; cd "$W" || exit 1
+git init -q
+# Forged dates, as epoch seconds: git rejects "8 months ago" here, and the
+# two date(1) dialects disagree about how to subtract a day.
+NOW="$(date +%s)"
+commit() { # $1 days ago  $2 message
+  local when="@$((NOW - $1 * 86400)) +0000"
+  GIT_AUTHOR_DATE="$when" GIT_COMMITTER_DATE="$when" \
+    git -c user.name=t -c user.email=t@t commit -qm "$2"
+}
+mkdir -p fresh quiet_used quiet_orphan
+echo "print(1)" > fresh/main.py
+echo "print(2)" > quiet_used/lib.py
+echo "print(3)" > quiet_orphan/old.py
+# The build script reaches one of the two quiet parts and not the other. That
+# one mention is the whole difference between `stable` and a retire candidate.
+printf '#!/bin/sh\npython quiet_used/lib.py\n' > build.sh
+git add .
+commit 240 "everything lands"
+echo "print(4)" >> fresh/main.py
+git add fresh
+commit 6 "only the fresh part moves"
+
+out="$(bash "$PACK/skills/os-big-picture/scripts/census.sh" .)"
+signal() { printf '%s\n' "$out" | awk -v p="$1" -F'\t' '$2 == p {print $6}'; }
+
+[ "$(signal fresh)" = "active" ]; check "worked on last week reads active" 0 $?
+case "$(signal quiet_orphan)" in
+  "unused - "*) check "quiet and unreached reads unused" 0 0 ;;
+  *) check "quiet and unreached reads unused" 0 1 ;;
+esac
+[ "$(signal quiet_used)" = "stable" ]
+check "quiet but still reached reads stable, not unused" 0 $?
+# The AGE line: this repository's first commit is eight months back, so the
+# liveness column is old enough to mean something and takes no warning.
+printf '%s\n' "$out" | awk -F'\t' '$1 == "AGE" && $3 == "ok" {found=1} END {exit !found}'
+check "a repository past six months takes no young-repo warning" 0 $?
+
+echo "CASE 12  the census on a repository younger than the quiet window"
+# A young project has no quiet code by definition, so every part reads active
+# and the map would report a clean bill of health it did not earn. The script
+# has to say the column cannot mean anything yet, and from when it will.
+H="$(mktemp -d)"; W="$(mktemp -d)"; cd "$W" || exit 1
+git init -q
+mkdir -p app
+echo "print(1)" > app/main.py
+git add .
+commit 10 "a young project"
+out="$(bash "$PACK/skills/os-big-picture/scripts/census.sh" .)"
+printf '%s\n' "$out" | awk -F'\t' '$1 == "AGE" && $3 == "young" && $4 ~ /^[0-9]{4}-/ {found=1} END {exit !found}'
+check "says young, and names the date it starts to mean something" 0 $?
+
 echo
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]

@@ -26,8 +26,8 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v7
-      # Eight scenarios plus CASE 9, in throwaway repositories with a throwaway
-      # home directory. Needs no git identity and touches nothing outside them.
+      # Twelve scenarios, in throwaway repositories with a throwaway home
+      # directory. Needs no git identity and touches nothing outside them.
       - run: bash hooks/test.sh
 
   # Contributions arrive from outside the project and leave again under MIT, so

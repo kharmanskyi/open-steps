@@ -121,6 +121,21 @@ We found all three by running it, not by reading about it.
   per shape the scorer must handle, short enough to read. They exist to show
   the scorer failing and then passing on a shape that bit once; nothing in
   them was said by a model, and they never feed `results.md`.
+- **A denied tool call is a system event whose `message` is a sentence, not an
+  object.** Headless runs get no permission prompt, so every `Skill` call in a
+  sweep is denied and every stream carries these lines. Reading `.content` off
+  one raised, and a single such line ended the whole day's scoring. The model
+  still chose the skill, so activation is unaffected - but the quality arm is:
+  with the pack's skills denied, the `with` arm is running unaided too, and
+  those columns say nothing at all until a run permits them.
+- **The `os-check-work` phrases reach real sessions.** `run.sh` gives each run
+  a throwaway repository, but not a throwaway session namespace: a run asked
+  "how are the other sessions doing?" lists the live Claude sessions on the
+  machine and messages them. In one pass three of them pinged the session that
+  had launched the sweep, and one pinged an unrelated session busy with
+  somebody else's project. Nothing was written and nothing broke, but the runs
+  are not sealed off, and a person watching their own session will see the
+  interruptions. Run a sweep when you can afford that.
 - `claude -p --bare` skips the login on purpose and cannot sign in.
 - Pointing the tool at an empty home folder signs it out too.
 - macOS ships an old bash, version 3.2. In that version one empty list in the
