@@ -3,9 +3,13 @@
 
     python3 evals/score.py --print ~/.claude/open-steps/evals/2026-08-24
     python3 evals/score.py ~/.claude/open-steps/evals/2026-08-24
+    python3 evals/score.py --readme ~/.claude/open-steps/evals/2026-08-24
 
-The first prints the table, the second also writes it to evals/results.md. The
-transcripts sit outside the repository, one folder per day, holding every model
+The first prints the table, the second also writes it to evals/results.md, the
+third also rewrites the summary table in the main README, dated with the day
+it came from. That last one is a flag and not a side effect because partial
+days and foreign branches get scored all the time, and none of them belong on
+the front page by accident. The transcripts sit outside the repository, one folder per day, holding every model
 that ran that day. Which model a stream came from is read out of the stream
 itself, so a renamed file cannot mislabel a column. Activation comes from the
 tool-call log, report quality from plain string rules. The phrases come from
@@ -16,6 +20,9 @@ import json, pathlib, re, sys, collections
 HERE = pathlib.Path(__file__).resolve().parent
 CASES = HERE / "cases.md"
 MODELS = HERE / "models.md"
+README = HERE.parent / "README.md"
+MARK_A = "<!-- numbers: score.py writes this table, edit the prose but not these rows -->"
+MARK_B = "<!-- numbers: end -->"
 HASH = re.compile(r"\b[0-9a-f]{7,40}\b")
 JARGON = re.compile(r"\b(p95|TTL|JWT|middleware|lockfile|CVE|e2e|env drift|CDN)\b", re.I)
 MARKERS = ("-act-", "-neg-", "-qual-")
@@ -165,6 +172,56 @@ def ordered_skills(runs):
     return [s for s in order if s in tested] + sorted(tested - seen)
 
 
+def readme_table(runs):
+    """The summary table the main README shows. Best skill first and the
+    misses last, because the prose under it reads the misses as the important
+    part. Ties are broken by the order cases.md tests the skills, so the sort
+    is a stated rule, not an accident of the run."""
+    models = sorted(runs, key=rank)
+    cols = [runs[m] for m in models]
+    head = " | ".join(label(m) for m in models)
+    order = ordered_skills(runs)
+
+    def hits(s):
+        return sum(r["skill"].get(s, [0, 0, 0])[0] for r in cols)
+
+    out = [f"| Skill | {head} |", "|" + "---|" * (len(cols) + 1)]
+    for s in sorted(order, key=lambda s: (-hits(s), order.index(s))):
+        cells = " | ".join(f"{r['skill'].get(s, [0, 0, 0])[0]}/{r['skill'].get(s, [0, 0, 0])[1]}" for r in cols)
+        out.append(f"| `{s}` | {cells} |")
+    phrases = len({i for r in cols for i in r["phrase"]})
+    tot = []
+    for r in cols:
+        h = sum(v[0] for v in r["skill"].values())
+        n = sum(v[1] for v in r["skill"].values())
+        tot.append(f"**{100 * h // max(n, 1)}%**")
+    out.append(f"| **All {phrases} phrases** | " + " | ".join(tot) + " |")
+    out.append("| Fired on an off-topic question | "
+               + " | ".join(f"{r['neg'][0]}/{r['neg'][1]}" for r in cols) + " |")
+    return "\n".join(out)
+
+
+def update_readme(folder, runs):
+    """Rewrite the summary table in the main README, between its two markers,
+    with the day it was measured on written above it, so a number can never
+    wear the prose's date. Only that block: the prose and the figure around it
+    belong to a person. No markers means no touch and a word about it, never a
+    guess at where the table was supposed to go."""
+    if not README.exists():
+        return "README.md not found, left alone"
+    text = README.read_text()
+    if MARK_A not in text or MARK_B not in text:
+        return "README.md has no table markers, left alone"
+    a = text.index(MARK_A) + len(MARK_A)
+    b = text.index(MARK_B)
+    block = f"Measured on {folder.name}.\n\n" + readme_table(runs)
+    new = text[:a] + "\n\n" + block + "\n\n" + text[b:]
+    if new == text:
+        return f"README.md already matches {folder.name}"
+    README.write_text(new)
+    return f"wrote the summary table into README.md, dated {folder.name}. The prose around it is not touched"
+
+
 def report(folder, runs):
     """The whole day as one page: per skill, per phrase, then the quality arms."""
     models = sorted(runs, key=rank)
@@ -216,10 +273,12 @@ def report(folder, runs):
     return "\n".join(out) + "\n"
 
 
-args = [a for a in sys.argv[1:] if a != "--print"]
-show_only = "--print" in sys.argv[1:]
-if len(args) != 1 or not pathlib.Path(args[0]).is_dir():
-    sys.exit("usage: score.py [--print] ~/.claude/open-steps/evals/<day>")
+flags = [a for a in sys.argv[1:] if a.startswith("--")]
+args = [a for a in sys.argv[1:] if not a.startswith("--")]
+show_only, readme = "--print" in flags, "--readme" in flags
+if (len(args) != 1 or not pathlib.Path(args[0]).is_dir()
+        or set(flags) - {"--print", "--readme"} or (show_only and readme)):
+    sys.exit("usage: score.py [--print | --readme] ~/.claude/open-steps/evals/<day>")
 folder = pathlib.Path(args[0])
 runs = read_day(folder)
 if not runs:
@@ -228,5 +287,9 @@ text = report(folder, runs)
 if not show_only:
     out = HERE / "results.md"
     out.write_text(text)
-    print(f"wrote {out}\n")
+    print(f"wrote {out}")
+    # The README is the front page. It changes on --readme only, never as a
+    # side effect of scoring a partial day or a foreign branch.
+    print(update_readme(folder, runs) if readme else "README.md not touched, --readme rewrites its table")
+    print()
 print(text)

@@ -50,6 +50,17 @@ day holds every model you want, write the table:
 python3 evals/score.py ~/.claude/open-steps/evals/2026-08-24
 ```
 
+That writes `evals/results.md`. The summary table on the front page is a
+separate, deliberate step, and the block it writes carries the day it came
+from:
+
+```bash
+python3 evals/score.py --readme ~/.claude/open-steps/evals/2026-08-24
+```
+
+Scoring a partial day or a foreign branch without the flag leaves the main
+README exactly as it was.
+
 ## How to read the numbers fairly
 
 The runs happen on a machine where the pack is installed and working. The
