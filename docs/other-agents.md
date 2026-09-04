@@ -22,11 +22,20 @@ Copies, so run it again after a `git pull` to update.
 
 One skill carries over worse than the rest. `os-what-could-go-wrong` inlines
 its analysis prompt with a `!` command and hands the attack to a fresh
-subagent, and both are Claude Code behaviours. On these tools the `!` line
-arrives as literal text, and the skill then says to read
-`references/premortem-prompt.md` directly; whether the tool can dispatch a
-fresh agent varies. None of this is verified here - expect this one skill to
-run shallower than the other six.
+subagent, and both are Claude Code behaviours. Measured on Codex CLI 0.151.0,
+four runs with a real decision brief. The `!` line arrives as literal text and
+the skill's own fallback works: Codex reads
+`references/premortem-prompt.md` next to it. No fresh agent is dispatched. All
+four runs called the review independent anyway, one wrote the whole report
+twice, and one skipped a step the others took.
+
+A fresh process is reachable, but not on defaults. A nested `codex exec` fails
+to initialize inside the sandbox; the session reports that the dispatch failed
+and calls the review independent in the same sentence. With approvals and the
+sandbox bypassed it starts, about three minutes, with its own session id. What
+went out was the brief plus an instruction to run the skill rather than the
+four things step 2 names, so the fresh session loaded the skill and ran the
+whole thing again, and the report appeared four times in one transcript.
 
 Linking instead works and updates itself, but it renames the skills. Codex
 resolves a symlink back to the clone and takes the namespace from the folder

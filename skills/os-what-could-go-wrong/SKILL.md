@@ -102,6 +102,12 @@ One agent, not several. Two reports have two verdicts and two candidates for
 the single belief nobody is questioning, and merging them is exactly the
 editing that step 3 forbids.
 
+Where no fresh agent can be started, say so in the first line of the report,
+name the tool, and never use the word independent. On Codex a fresh process is
+reachable only outside the sandbox, and the handover has to carry the analysis
+prompt itself: sending the brief with an instruction to run this skill makes
+the fresh session load the skill and run the whole thing again.
+
 ## Step 3 - give it to the user straight
 
 Pass the report through as it came. No reassurance the analysis did not earn,
