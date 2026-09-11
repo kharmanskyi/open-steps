@@ -50,6 +50,17 @@ day holds every model you want, write the table:
 python3 evals/score.py ~/.claude/open-steps/evals/2026-08-24
 ```
 
+That writes `evals/results.md`. The summary table on the front page is a
+separate, deliberate step, and the block it writes carries the day it came
+from:
+
+```bash
+python3 evals/score.py --readme ~/.claude/open-steps/evals/2026-08-24
+```
+
+Scoring a partial day or a foreign branch without the flag leaves the main
+README exactly as it was.
+
 ## How to read the numbers fairly
 
 The runs happen on a machine where the pack is installed and working. The
@@ -110,6 +121,11 @@ We found all three by running it, not by reading about it.
   per shape the scorer must handle, short enough to read. They exist to show
   the scorer failing and then passing on a shape that bit once; nothing in
   them was said by a model, and they never feed `results.md`.
+- **A run leaves no reports folder for its throwaway project.** `run.sh` switches
+  the stop hook off for the sessions it starts (`OPEN_STEPS_DISABLE=1`); the
+  session-start hook stays on because its reminder is part of what is measured.
+  Nothing lands in git during a run, so the numbers do not change, only the
+  leftovers under `~/.claude/open-steps/reports/` stop appearing.
 - **A denied tool call is a system event whose `message` is a sentence, not an
   object.** Headless runs get no permission prompt, so every `Skill` call in a
   sweep is denied and every stream carries these lines. Reading `.content` off

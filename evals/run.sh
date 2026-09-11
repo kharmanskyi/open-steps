@@ -30,6 +30,13 @@ N_RUNS="${N_RUNS:-3}"
 # array under `set -u` kills the shell without a word.
 MODELS="${EVAL_MODEL:-haiku}"
 PAR="${EVAL_PARALLEL:-5}"
+# The stop hook stays out of eval runs. Every session here starts inside a
+# throwaway repository, and the hook would leave a reports folder for each one
+# under ~/.claude/open-steps/reports/. Nothing lands in git during a run, so
+# the hook never asks for a report anyway; this only stops the leftovers. The
+# session-start hook stays on: its handover and routing reminder are part of
+# the installed behaviour these runs measure.
+export OPEN_STEPS_DISABLE=1
 # 240s cap per run. macOS ships no timeout command of its own (it usually
 # arrives with Homebrew coreutils), so fall back to gtimeout, then to no cap.
 if command -v timeout >/dev/null 2>&1; then LIMIT="timeout 240"

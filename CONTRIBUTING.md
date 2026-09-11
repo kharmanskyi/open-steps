@@ -28,8 +28,10 @@ to change something, seven rules cover it.
    `references/`. The measured half of `os-big-picture` moved into
    `scripts/census.sh` for exactly this reason, and got tests out of it.
 
-Testing the hooks: `bash hooks/test.sh` puts both of them through twelve
-scenarios in throwaway repositories, with a throwaway home directory, so it
+Testing the hooks: `bash hooks/test.sh` puts both of them through fourteen
+scenarios in throwaway repositories, two of them through the adapter (Cursor, then
+Gemini CLI) and three through the census script of `os-big-picture`, with a
+throwaway home directory, so it
 touches nothing of yours. Run one by hand instead and remember that both read
 from standard input: add `</dev/null` or they sit there waiting for a payload
 that never comes.

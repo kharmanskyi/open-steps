@@ -250,7 +250,7 @@ else
     fi
   fi
 
-  for s in session-start.sh stop-report.sh; do
+  for s in session-start.sh stop-report.sh adapter.sh; do
     p="$INSTALL/hooks/$s"
     if [ ! -e "$p" ]; then
       fault "The hook file $s is missing from the installed copy." 3
@@ -281,7 +281,7 @@ else
     unknown "Whether the hooks can run was not checked. This disk marks files runnable on its own."
   else
     notrun=""
-    for s in session-start.sh stop-report.sh; do
+    for s in session-start.sh stop-report.sh adapter.sh; do
       p="$INSTALL/hooks/$s"
       [ -r "$p" ] || continue
       [ -x "$p" ] || notrun="$notrun $s"
@@ -481,7 +481,7 @@ unknown "A writing style can be set elsewhere too. This only read the settings f
 
 # --- other tools ----------------------------------------------------------
 section "Other tools"
-fact "Cursor and Gemini CLI are not supported yet. See issues #2 and #3."
+fact "Cursor and Gemini CLI run the hooks through hooks/adapter.sh, wired by hand; see docs/other-agents.md."
 
 # --- the result -----------------------------------------------------------
 section "Result"

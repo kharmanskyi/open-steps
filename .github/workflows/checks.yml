@@ -26,7 +26,8 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v7
-      # Twelve scenarios, in throwaway repositories with a throwaway home
+      # Fourteen scenarios, two through the adapter and three through the census
+      # script of os-big-picture, in throwaway repositories with a throwaway home
       # directory. Needs no git identity and touches nothing outside them.
       - run: bash hooks/test.sh
 

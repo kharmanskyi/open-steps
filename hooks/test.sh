@@ -99,24 +99,123 @@ printf '{"session_id":"S9","cwd":"%s","transcript_path":null,"model":"gpt-5","pe
   | HOME="$H" bash "$PACK/hooks/stop-report.sh" 2>/dev/null
 check "the session id is still found" 2 $?
 
-echo "CASE 10  the map this pack writes into the project"
+echo "CASE 10  Cursor: JSON both ways, and a stop that cannot block"
+# Cursor answers only to JSON on stdout and cannot block a stop, so the adapter
+# wraps the handover as additional_context and turns the report request into a
+# followup_message. Its stop payload carries no session_id, only
+# conversation_id, so the adapter keys both events on that: a stop that still
+# looked for session_id would take a fresh baseline instead of asking.
+# CURSOR_PROJECT_DIR is set on every call because Cursor always sets it and
+# the adapter follows it; left to the environment, a suite run from inside a
+# hook would measure some other repository.
+H="$(mktemp -d)"; newrepo
+# A previous report with the characters JSON cannot carry raw. The routing
+# table has none of them, so without this the escaping is never exercised.
+mkdir -p "$H/.claude/open-steps/reports/$(basename "$PWD")"
+printf '%s\n' 'path C:\Users \"quoted\" \d' > "$H/.claude/open-steps/reports/$(basename "$PWD")/latest.md"
+cstart="$(printf '{"conversation_id":"C10","generation_id":"g1","hook_event_name":"sessionStart","session_id":"S10","workspace_roots":["%s"]}' "$PWD")"
+out="$(printf '%s' "$cstart" | HOME="$H" CURSOR_PROJECT_DIR="$PWD" bash "$PACK/hooks/adapter.sh" cursor session-start 2>/dev/null)"
+case "$out" in
+  '{"additional_context":"'*"<session-handover>"*os-done-or-not*'"}') check "the handover arrives as additional_context" 0 0 ;;
+  *) check "the handover arrives as additional_context" 0 1 ;;
+esac
+[ "$(printf '%s' "$out" | wc -l | tr -d ' ')" = "0" ]; check "on one line, newlines escaped" 0 $?
+printf '%s' "$out" | grep -Fq 'path C:\\Users \\\"quoted\\\" \\d' ; check "backslashes doubled and quotes escaped" 0 $?
+echo change >> a.txt
+cstop='{"conversation_id":"C10","generation_id":"g2","hook_event_name":"stop","status":"aborted","loop_count":0}'
+out="$(printf '%s' "$cstop" | HOME="$H" CURSOR_PROJECT_DIR="$PWD" bash "$PACK/hooks/adapter.sh" cursor stop 2>/dev/null)"
+[ "$out" = "{}" ]; check "an aborted stop is left alone" 0 $?
+cstop='{"conversation_id":"C10","generation_id":"g3","hook_event_name":"stop","status":"completed","loop_count":0}'
+out="$(printf '%s' "$cstop" | HOME="$H" CURSOR_PROJECT_DIR="$PWD" bash "$PACK/hooks/adapter.sh" cursor stop 2>/dev/null)"
+code=$?
+case "$out" in
+  '{"followup_message":"Work landed'*os-done-or-not*'"}') check "a completed stop asks through followup_message" 0 0 ;;
+  *) check "a completed stop asks through followup_message" 0 1 ;;
+esac
+check "with exit 0, since 2 cannot block here" 0 $code
+# Parsed by a real interpreter where one exists, since the shape checks above
+# cannot see a bad escape. Skipped, not failed, where there is none.
+py=""
+for cand in python3 python; do
+  command -v "$cand" >/dev/null 2>&1 && "$cand" -c 'import json' >/dev/null 2>&1 && { py="$cand"; break; }
+done
+if [ -n "$py" ]; then
+  printf '%s' "$out" | "$py" -c 'import json, sys; json.load(sys.stdin)' 2>/dev/null
+  check "and it parses as JSON" 0 $?
+fi
+out="$(printf '%s' "$cstop" | HOME="$H" CURSOR_PROJECT_DIR="$PWD" bash "$PACK/hooks/adapter.sh" cursor stop 2>/dev/null)"
+[ "$out" = "{}" ]; check "the next stop is silent, no loop" 0 $?
+
+echo "CASE 11  Gemini CLI: JSON both ways, and a stop that refuses on AfterAgent"
+# Gemini CLI wants JSON too, with its own field names: the handover goes in
+# hookSpecificOutput.additionalContext, and the report is asked for through
+# decision "deny" with a reason, on AfterAgent. SessionEnd would run the same
+# script, exit cleanly, and never ask; that is why the event is named here.
+# Every Gemini payload carries session_id and every hook gets
+# GEMINI_SESSION_ID; the adapter reads the first and falls back to the second.
+H="$(mktemp -d)"; newrepo
+gstart="$(printf '{"session_id":"G11","transcript_path":"%s/t.json","cwd":"%s","hook_event_name":"SessionStart","timestamp":"2026-01-01T00:00:00Z","source":"startup"}' "$H" "$PWD")"
+out="$(printf '%s' "$gstart" | HOME="$H" GEMINI_PROJECT_DIR="$PWD" bash "$PACK/hooks/adapter.sh" gemini session-start 2>/dev/null)"
+case "$out" in
+  '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"'*"<session-handover>"*os-done-or-not*'"}}') check "the handover arrives as hookSpecificOutput.additionalContext" 0 0 ;;
+  *) check "the handover arrives as hookSpecificOutput.additionalContext" 0 1 ;;
+esac
+[ "$(printf '%s' "$out" | wc -l | tr -d ' ')" = "0" ]; check "on one line, newlines escaped" 0 $?
+grep -q '^OS_STATE_SESSION=G11$' "$H/.claude/open-steps/reports/$(basename "$PWD")/.stop-state"
+check "the baseline is keyed on the session id Gemini sent" 0 $?
+gafter="$(printf '{"session_id":"G11","transcript_path":"%s/t.json","cwd":"%s","hook_event_name":"AfterAgent","timestamp":"2026-01-01T00:01:00Z","prompt":"append a line","prompt_response":"Done.","stop_hook_active":false}' "$H" "$PWD")"
+out="$(printf '%s' "$gafter" | HOME="$H" GEMINI_PROJECT_DIR="$PWD" bash "$PACK/hooks/adapter.sh" gemini stop 2>/dev/null)"
+[ "$out" = "{}" ]; check "nothing landed, AfterAgent lets the turn end" 0 $?
+echo change >> a.txt
+out="$(printf '%s' "$gafter" | HOME="$H" GEMINI_PROJECT_DIR="$PWD" bash "$PACK/hooks/adapter.sh" gemini stop 2>/dev/null)"
+code=$?
+# The reason ends with where to save the report: Gemini's file tool refuses
+# paths outside the workspace, and the reports folder is one.
+case "$out" in
+  '{"decision":"deny","reason":"Work landed'*os-done-or-not*'shell tool'*'"}') check "work landed, AfterAgent refuses with the request as the reason" 0 0 ;;
+  *) check "work landed, AfterAgent refuses with the request as the reason" 0 1 ;;
+esac
+check "with exit 0, the refusal is in the JSON" 0 $code
+if [ -n "$py" ]; then
+  printf '%s' "$out" | "$py" -c 'import json, sys; json.load(sys.stdin)' 2>/dev/null
+  check "and it parses as JSON" 0 $?
+fi
+# Gemini marks the retry it runs after a deny with stop_hook_active true. The
+# adapter lets that one through without asking, whatever landed in it, since
+# denying the retry is the one way to loop. Shown with the cooldown off and a
+# further change, which would otherwise be asked for.
+echo more >> a.txt
+gretry="${gafter/\"stop_hook_active\":false/\"stop_hook_active\":true}"
+out="$(printf '%s' "$gretry" | HOME="$H" GEMINI_PROJECT_DIR="$PWD" OPEN_STEPS_COOLDOWN=0 bash "$PACK/hooks/adapter.sh" gemini stop 2>/dev/null)"
+[ "$out" = "{}" ]; check "the retry after the report is let through, no loop" 0 $?
+# A payload without session_id: the adapter falls back to GEMINI_SESSION_ID
+# and finds the baseline, so the change above is asked for now. Keyed on
+# anything else, this stop would take a fresh baseline and answer {}.
+gnoid="${gafter/\"session_id\":\"G11\",/}"
+out="$(printf '%s' "$gnoid" | HOME="$H" GEMINI_PROJECT_DIR="$PWD" GEMINI_SESSION_ID=G11 OPEN_STEPS_COOLDOWN=0 bash "$PACK/hooks/adapter.sh" gemini stop 2>/dev/null)"
+case "$out" in
+  '{"decision":"deny","reason":"Work landed'*'"}') check "without session_id in the payload, GEMINI_SESSION_ID finds the same baseline" 0 0 ;;
+  *) check "without session_id in the payload, GEMINI_SESSION_ID finds the same baseline" 0 1 ;;
+esac
+
+echo "CASE 12  the map this pack writes into the project"
 # os-big-picture writes BIG-PICTURE.md inside the repository, unlike reports. If
 # the fingerprint counted it, the agent would be asked for a report about the
 # file it just wrote, once the cooldown expired. The second assertion is the
 # one that matters: excluding it must not swallow real work landing alongside.
 H="$(mktemp -d)"; newrepo
-start S10
+start S12
 echo "the map" > BIG-PICTURE.md
-stop S10; check "the map alone is not work" 0 $?
+stop S12; check "the map alone is not work" 0 $?
 echo change >> a.txt
-stop S10; check "real work alongside it still asks" 2 $?
+stop S12; check "real work alongside it still asks" 2 $?
 
-echo "CASE 11  the census the map is measured from"
+echo "CASE 13  the census the map is measured from"
 # scripts/census.sh is the whole measured half of os-big-picture, so the two
 # signals are worth a real repository rather than a promise in prose. Three
 # parts with forged commit dates: one touched last week, one untouched for
 # eight months that nothing mentions, one untouched for eight months that the
-# build script does. Two-sided like CASE 10: the quiet-and-unused part must be
+# build script does. Two-sided like CASE 12: the quiet-and-unused part must be
 # named, and the quiet-but-wired part must not be, or the map recommends
 # deleting a working product.
 H="$(mktemp -d)"; W="$(mktemp -d)"; cd "$W" || exit 1
@@ -157,7 +256,7 @@ check "quiet but still reached reads stable, not unused" 0 $?
 printf '%s\n' "$out" | awk -F'\t' '$1 == "AGE" && $3 == "ok" {found=1} END {exit !found}'
 check "a repository past six months takes no young-repo warning" 0 $?
 
-echo "CASE 12  the census on a repository younger than the quiet window"
+echo "CASE 14  the census on a repository younger than the quiet window"
 # A young project has no quiet code by definition, so every part reads active
 # and the map would report a clean bill of health it did not earn. The script
 # has to say the column cannot mean anything yet, and from when it will.

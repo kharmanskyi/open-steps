@@ -115,7 +115,9 @@ To update: `git pull` inside `open-steps/`, then
 updates from your clone, not from GitHub, so without the pull "already at the
 latest version" is true of the folder and wrong about this repository. And
 `update` wants the full plugin@marketplace name, where `uninstall` accepts the
-short one. To remove: `claude plugin uninstall open-steps`, then take the
+short one. And the update moves files only when the version number changed: a
+pull that brings no new version brings nothing to the installed copy, so every
+change meant to reach it ships with a version bump and a release. To remove: `claude plugin uninstall open-steps`, then take the
 block back out of your `CLAUDE.md`.
 
 The one piece that stays manual is the writing style, because turning it on
@@ -138,15 +140,19 @@ instructions, doing the same job it does in `CLAUDE.md` above:
 |---|---|---|
 | Codex | `~/.codex/AGENTS.md` | checked, on Codex CLI 0.145 |
 | Cursor | `AGENTS.md` in the project root | Cursor's documentation |
-| Gemini CLI | `~/.gemini/GEMINI.md` | Gemini CLI's documentation |
+| Gemini CLI | `~/.gemini/GEMINI.md` | checked, on Gemini CLI 0.58.0 |
 
 The hooks are the part that differs per tool. Codex runs both of them
 unchanged, with a short block in `~/.codex/config.toml` and one trust prompt to
-accept. Cursor
-and Gemini CLI want JSON where these two print text, so both need an adapter
-that is not written yet, and on Cursor a stop cannot be blocked at all. On
-both, the skills and the routing block install; how reliably the skills fire
-there is not checked.
+accept. Cursor runs both through `hooks/adapter.sh`, which wraps them in the
+JSON Cursor wants; a stop cannot be blocked there, so the report is asked for
+as a follow-up message rather than required, and only in an interactive
+session, since a headless run never reaches the stop hook. Gemini CLI runs
+both through the same adapter, and there the stop can refuse, on `AfterAgent`;
+the one thing to know is that its file tool cannot write outside the
+workspace, so the request says to save the report with the shell tool, and
+the docs say the rest. On all three, the skills and
+the routing block install; how reliably the skills fire there is not checked.
 
 The commands, the paths, the Codex hook config, and what was run rather than
 read: [`docs/other-agents.md`](docs/other-agents.md).
@@ -231,10 +237,14 @@ whole. Run `bash evals/run.sh` before trusting either number.
 
 ![Activation per skill on Haiku 4.5, Sonnet 5 and Opus 5](assets/activation.svg)
 
+<!-- numbers: score.py writes this table, edit the prose but not these rows -->
+
+Measured on 2026-08-29.
+
 | Skill | Haiku 4.5 | Sonnet 5 | Opus 5 |
 |---|---|---|---|
-| `os-check-work` | 9/9 | 9/9 | 9/9 |
 | `os-whats-next` | 9/9 | 9/9 | 9/9 |
+| `os-check-work` | 9/9 | 9/9 | 9/9 |
 | `os-what-could-go-wrong` | 9/9 | 9/9 | 9/9 |
 | `os-ask-simple` | 9/9 | 8/9 | 9/9 |
 | `os-done-or-not` | 9/9 | 7/9 | 9/9 |
@@ -242,6 +252,8 @@ whole. Run `bash evals/run.sh` before trusting either number.
 | `os-step-by-step` | 4/9 | 9/9 | 9/9 |
 | **All 21 phrases** | **87%** | **95%** | **100%** |
 | Fired on an off-topic question | 1/9 | 0/9 | 0/9 |
+
+<!-- numbers: end -->
 
 The honest reading, because the misses matter more than the score.
 
