@@ -235,6 +235,9 @@ echo "print(3)" > quiet_orphan/old.py
 # The build script reaches one of the two quiet parts and not the other. That
 # one mention is the whole difference between `stable` and a retire candidate.
 printf '#!/bin/sh\npython quiet_used/lib.py\n' > build.sh
+# Housekeeping files, old and unmentioned: they must not read as retire candidates.
+printf 'node_modules\n' > .gitignore
+printf 'MIT\n' > LICENSE
 git add .
 commit 240 "everything lands"
 echo "print(4)" >> fresh/main.py
@@ -251,6 +254,8 @@ case "$(signal quiet_orphan)" in
 esac
 [ "$(signal quiet_used)" = "stable" ]
 check "quiet but still reached reads stable, not unused" 0 $?
+printf '%s\n' "$out" | awk -F'\t' '$1 == "PART" && ($2 == ".gitignore" || $2 == "LICENSE") {found=1} END {exit found}'
+check "housekeeping files stay off the map" 0 $?
 # The AGE line: this repository's first commit is eight months back, so the
 # liveness column is old enough to mean something and takes no warning.
 printf '%s\n' "$out" | awk -F'\t' '$1 == "AGE" && $3 == "ok" {found=1} END {exit !found}'

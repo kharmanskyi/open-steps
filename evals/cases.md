@@ -44,7 +44,7 @@ prove the two skills stay apart rather than assert it.
 | os-what-could-go-wrong | We have decided to raise prices 20% for existing customers next month. Do a premortem on it, what are we missing? |
 | os-big-picture | What have we actually built here? Give me the whole picture of this project. |
 | os-big-picture | Map this project for me - what is in it, and what is nobody using any more? |
-| os-big-picture | What's the status of the project overall - where are we? |
+| os-big-picture | Where are we with this project overall? Give me the big picture. |
 
 ## Should not fire
 

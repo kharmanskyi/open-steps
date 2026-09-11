@@ -2,8 +2,7 @@
 name: os-big-picture
 description: >-
   ALWAYS invoke this skill when the user asks where the project as a whole
-  stands - "where are we", "what's the big picture", "what's the status of the
-  project", "what have we built", "what is in this project", "map the
+  stands - "where are we", "what's the big picture", "what have we built", "what is in this project", "map the
   project", "what does this thing even do", "what is stale", "what can we
   delete", "update the roadmap" - in any language, and whenever a session
   report has just been written. It keeps one file, BIG-PICTURE.md: what the
@@ -71,7 +70,7 @@ commits in six months, whether anything outside reaches it, the signal.
 **When the `AGE` line says `young`**, write one line directly above the table,
 before the header row: *"This project is N days old. Nothing here can be quiet
 for six months yet, so the Signal column will only start to mean something from
-&lt;the date the script gave&gt;."* Every `active` is then a fact about the
+the date the script gave."* Every `active` is then a fact about the
 calendar, not the code. On an `ok` line, write no such note.
 
 ## Step 4 - the backlog, sourced and never invented

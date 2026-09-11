@@ -60,6 +60,13 @@ parts() {
 parts | while IFS= read -r p; do
   [ -n "$p" ] || continue
   printf '%s' "$p" | grep -Eq "$SKIP" && continue
+  # Repository housekeeping is not a feature: a licence, a readme, an ignore
+  # file. Nothing names them, so they would read as unused on any repository
+  # older than the window, and "retire .gitignore" is the confident, wrong map.
+  case "$p" in
+    .*|LICENSE*|LICENCE*|README*|CHANGELOG*|CONTRIBUTING*|CODE_OF_CONDUCT*|SECURITY*)
+      [ -f "$p" ] && continue ;;
+  esac
 
   last="$(git log -1 --format=%ad --date=short -- "$p" 2>/dev/null)"
   [ -n "$last" ] || continue
@@ -73,7 +80,7 @@ parts | while IFS= read -r p; do
   # by its name, a loose file by its name without the extension.
   name="${p%/}"
   case "$name" in */*) name="${name##*/}" ;; esac
-  [ -f "$p" ] && name="${name%.*}"
+  if [ -f "$p" ]; then base="${name%.*}"; [ -n "$base" ] && name="$base"; fi
   wired=orphan
   if [ -n "$name" ] && git grep -l -F -e "$name" -- . ":(exclude)$p" >/dev/null 2>&1; then
     wired=wired
