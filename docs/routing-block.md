@@ -1,4 +1,4 @@
-## These moments require a skill - not optional
+## These moments require a skill: not optional
 
 Invoke the skill. Do not improvise the answer in its place.
 

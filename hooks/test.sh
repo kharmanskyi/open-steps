@@ -684,6 +684,30 @@ check "and the exit code names the skills" 1 "$code"
 rm -f "$err"
 
 
+echo "CASE 19  a session id that is really a command"
+# The session id comes from the tool's payload and is written to the state
+# file. An id with ; or $( ) in it must never run, whether it arrives now or
+# sits in a state file an older version wrote. Such an id is replaced by the
+# fallback, so the hooks still work: the change at the end is still asked for.
+H="$(mktemp -d)"; newrepo
+P="$(mktemp -d)"
+for bad in "x;touch $P/semicolon" "\$(touch $P/substitution)" "\`touch $P/backtick\`"; do
+  start "$bad"; check "session start with a hostile id" 0 $?
+  stop "$bad"; check "stop with a hostile id, nothing changed" 0 $?
+done
+state="$H/.claude/open-steps/reports/$(basename "$W")/.stop-state"
+grep -q '^OS_STATE_SESSION=nosession$' "$state"
+check "the id is replaced by the fallback" 0 $?
+printf 'OS_STATE_SESSION=x;touch %s/legacy\nOS_STATE_FIRED_AT=$(touch %s/legacy)\n' "$P" "$P" > "$state"
+stop "x"; check "a hostile state file from an older version is read, not run" 0 $?
+start "\$(touch $P/substitution)"
+export OPEN_STEPS_COOLDOWN=0
+echo change >> a.txt
+stop "\$(touch $P/substitution)"; check "the fallback id still asks when work lands" 2 $?
+unset OPEN_STEPS_COOLDOWN
+[ -z "$(ls -A "$P")" ]; check "no command in any id ran" 0 $?
+rm -rf "$P"
+
 echo
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]

@@ -59,12 +59,13 @@ Stop as soon as you can answer.
    user, never a task to start.
 
    That file carries its own age: a measured date at the top and a date beside
-   every stage. Never take a number out of it. The two columns that come from
-   git - when a part was last worked on, and whether anything still reaches it
-   - you measure yourself, here, before using them; it is two commands and it
-   is the difference between a current answer and a confident old one. The
-   stages you cannot measure: use the dates beside them, and say the age out
-   loud whenever it is months behind the newest commit. Dates that stopped
+   every stage. Never take a number out of it. Take only the "What is next"
+   list, the "Worth retiring" rows, and each `Stage` with the date beside it.
+   Before you put a "Worth retiring" row to the user, measure it again. From the project root, run
+   `bash <this skill's folder>/../os-big-picture/scripts/census.sh .`. The `.`
+   is the project, not the skill folder. If the script is missing or does not
+   run, say so and call that row "not checked". When the stage dates are
+   months behind the newest commit, say how old they are. Dates that stopped
    moving mean the reports stopped, not that the work did.
 
 Say which sources you did not read: an unread source is not an empty source.
@@ -101,11 +102,12 @@ recommendation, not the graph.
 ```
 
 When a quick small win and a big item are both real candidates, offer the
-choice with the native picker - two to four options, the recommended one first
-and marked; where the picker is not available, one plain sentence. On the
-pick, prepare the launch: a prompt complete enough to paste or a command
-complete enough to run, one line saying what comes out - and never run it
-yourself.
+choice through your tool's question picker where it has one (in Claude Code,
+AskUserQuestion). Give two to four options, the recommended one first and
+marked. Where there is no picker, write the same question and options as plain
+text, the recommended one first and marked. On the pick, prepare the launch:
+a prompt complete enough to paste or a command complete enough to run, and one
+line saying what comes out. Never run it yourself.
 
 ## How many at once
 
@@ -146,7 +148,10 @@ that as the precondition instead of assuming it.
 - A stale tracker is worse than none - say when you read it. The same is true
   of the map, and it hides it better: its measured columns refresh themselves
   while the stages behind them age.
-- Draft pull requests are yours to finish, not the user's to merge.
+- A draft pull request is unfinished work, not a merge to put to the user. If
+  the session that opened it has ended, the draft goes in the I-can-do-alone
+  list. If another session still works on it, leave it to that session and
+  say so.
 - A quiet feature in the map is not a task. It is quiet because it is
   finished; the skill that wrote it already checked that something still uses
   it.

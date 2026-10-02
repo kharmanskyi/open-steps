@@ -1,8 +1,12 @@
 # The "Answer first" output style
 
-Optional. This is the piece aimed straight at long answers. Whether it actually
-shortens them is not measured: running the same input with the pack on and off
-came out as noise, and [`evals/README.md`](../evals/README.md) says why.
+This is a Claude Code setting. The pack does not wire it on Codex CLI, Cursor
+CLI or Gemini CLI.
+
+Optional. This is the piece aimed straight at long answers. Nobody has measured
+whether it makes them shorter. The evals switch the skills on and off, never
+this style, so the length test in [`evals/README.md`](../evals/README.md) says
+nothing about it.
 
 ## What it fixes
 
@@ -13,7 +17,7 @@ approach was wrong, what an old decision record said about it.
 That is usually not chattiness. It is what happens when an agent is told never to
 claim anything unverified: it starts *showing* proof rather than merely *having*
 it. Telling it "be shorter" trades away the honesty. This style separates the
-two instead - the answer comes first, the evidence comes on request.
+two instead: the answer comes first, and the evidence comes on request.
 
 Before, a two-part question:
 
@@ -25,7 +29,7 @@ Before, a two-part question:
 
 After:
 
-> No names - the vendor returns six fields and none of them is a name. But there
+> No names. The vendor returns six fields and none of them is a name. But there
 > is one endpoint we never opened; want me to check it, one request?
 >
 > Retry: the engine fetches 8 accounts at a time, so one pass does not cover 252.
@@ -35,11 +39,11 @@ After:
 
 ## Turn it on
 
-The style ships with the pack. It does **not** switch itself on - see below for
-why.
+The style ships with the Claude Code plugin. It does **not** switch itself on;
+the next section says why.
 
 - **Terminal:** run `/config`, choose **Output style**, pick **Answer first**.
-- **Any client:** set the field directly in `~/.claude/settings.json`:
+- **Any Claude Code client:** set the field directly in `~/.claude/settings.json`:
 
 ```json
 {
@@ -52,18 +56,18 @@ is read once at session start.
 
 ## Why it does not switch itself on
 
-Plugin output styles support `force-for-plugin: true`, which applies the style
-automatically and, per the documentation, **overrides the user's own
-`outputStyle` setting**.
+Claude Code plugin output styles support `force-for-plugin: true`, which
+applies the style automatically and, per the documentation, **overrides the
+user's own `outputStyle` setting**.
 
 This pack deliberately leaves it off. Someone who has chosen Explanatory, or
 written their own style, should not lose it silently by installing an unrelated
-pack. A pack whose whole premise is "do not surprise the operator" does not get
-to surprise them at install time.
+pack. A pack whose whole premise is "do not surprise the person using it" does
+not get to surprise them at install time.
 
 If you are packaging this for a team that wants it on by default, add
-`force-for-plugin: true` to the frontmatter of `output-styles/answer-first.md` -
-one line - and tell people you did.
+`force-for-plugin: true` to the frontmatter of `output-styles/answer-first.md`.
+It is one line. Tell people you did.
 
 ## What it does not cover
 
@@ -79,4 +83,4 @@ one line - and tell people you did.
 ## Note when editing it
 
 Changes to `SKILL.md` files take effect immediately. Changes to
-`output-styles/` do not - run `/reload-plugins` or restart.
+`output-styles/` do not: run `/reload-plugins` or restart Claude Code.

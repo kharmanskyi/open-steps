@@ -29,9 +29,8 @@ after the choice is made and before it can no longer be taken back.
 ## Language
 
 Write in the language the user speaks in this session, detected from the
-conversation. Names, figures and identifiers stay as they are. The agent you
-dispatch cannot see this conversation and does not inherit the writing style,
-so the language has to travel with the handover - see step 2.
+conversation. Names, figures and identifiers stay as they are. The fresh
+agent cannot see this conversation, so the language travels in the handover.
 
 ## Step 1 - write down what is actually being decided
 
@@ -81,22 +80,27 @@ Pick the depth, say which in one line, and carry on; the user can change it.
 When in doubt, Full. The cost of a full look is a few minutes; the cost of a
 quick look at a one-way door is the door.
 
-Dispatch one general-purpose agent. Send it four things and nothing else: the
-analysis prompt copied exactly from the bottom of this skill, `MODE: Full` or
-`MODE: Quick`, `LANGUAGE: <the language above>`, and the brief. Never send an
-instruction to run this skill: the fresh session would load it and start over.
+Dispatch one fresh agent, not several: in Claude Code, a general-purpose
+agent; elsewhere, whatever starts with an empty context. Send it four things
+and nothing else: the analysis prompt copied exactly from the bottom of this
+skill, `MODE: Full` or `MODE: Quick`, `LANGUAGE: <the language above>`, and the
+brief. Never send an instruction to run this skill: the fresh session would
+load it and start over.
 
-One agent, not several. Where no fresh agent can be started, say so in the
-first line of the report, name the tool, and never use the word independent.
+If no fresh agent can be started, run the prompt yourself with the same MODE,
+LANGUAGE and brief. The prompt says you did not help make this decision; for
+you that is false, so work from the brief alone and attack your own reasoning
+hardest. Never call the result independent.
 
 ## Step 3 - give it to the user straight
 
 The user never sees what the agent returned: a tool result is visible only to
 you. So your final message is that report, copied whole, first line to last.
-One line goes before it: the depth, and whether a fresh agent ran. Anything of
-your own comes after it, never instead of it: no summary in its place, no
-"details above", no reassurance the analysis did not earn, no dropped card
-because the user seemed committed. Bad news that arrives late is worth nothing.
+One line goes before it: the depth, and whether a fresh agent ran (if not,
+name your tool and say this session wrote the report). Anything of your own
+comes after it, never instead of it: no summary in its place, no "details
+above", no reassurance the analysis did not earn, no dropped card because the
+user seemed committed. Bad news that arrives late is worth nothing.
 
 Then offer to turn the "Fix before you commit" list into real things: edits to
 the plan, tickets, an owner and a date per item, a reminder for each early
@@ -104,11 +108,11 @@ warning. "Go ahead" is delivered just as plainly.
 
 ## Hard rules
 
-1. **The agent that helped decide never attacks the decision.** Dispatch a
-   fresh one every time, even when you already hold the whole thing in
-   context. Skipping this does not save a step, it changes the answer.
+1. **The agent that helped decide does not attack the decision when a fresh
+   one can.** Dispatch one every time, even with it all in context. Skipping
+   it changes the answer. Only a tool that cannot start one takes the fallback.
 2. **No quota of risks.** Publish what has a real chain behind it and nothing
-   else. Two well-evidenced risks beat six padded ones, and "only two
+   else. Three well-anchored risks beat seven padded ones, and "only two
    survived" is a finding worth saying out loud.
 3. **The verdict is decided last and printed first.** Never make the reader
    assemble it from the risks.
@@ -128,9 +132,6 @@ warning. "Go ahead" is delivered just as plainly.
 
 - **No date to be judged by means no premortem.** Pick a date that fits the
   decision, and say you picked it.
-- **The brief is where this is won or lost.** The fresh agent sees nothing else.
-- **Fewer than three risks is often the right answer.** Keep the record of what
-  was checked.
 - **Something reversible and cheap does not need this.** Quick look, or say so.
 - **"Try it small first" is not a soft no.** Test unknowns before money moves.
 - **The user may go ahead against all of it.** Note it once, set the tripwires
@@ -143,8 +144,7 @@ The reasoning behind these is in [`references/why-these-rules.md`](references/wh
 The block below is the whole of
 [`references/premortem-prompt.md`](references/premortem-prompt.md), inlined
 when this skill loads through `scripts/prompt.sh`, so no file has to be read
-at dispatch time. If the block shows a literal command instead of the prompt,
-this harness does not run inline commands: open that file next to this one
-and use its full text.
+at dispatch time. If it shows a literal command instead, your tool does not
+run inline commands: open that file next to this one and use its full text.
 
 !`bash ${CLAUDE_SKILL_DIR}/scripts/prompt.sh`

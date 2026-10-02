@@ -5,12 +5,20 @@
 
 OS_MAX_REPOS="${OPEN_STEPS_MAX_REPOS:-25}"
 
-# Session id from a hook payload; constant fallback, never empty.
+# Session id from a hook payload; constant fallback, never empty. The id comes
+# from another program and ends up in the state file, so it is kept only when
+# it is a plain identifier. Anything else becomes the fallback.
+OS_SESSION_PATTERN='^[A-Za-z0-9._:-]{1,128}$'
 os_session_id() { # $1 = raw payload
-  OS_SESSION="$(printf '%s' "${1:-}" \
+  local id
+  id="$(printf '%s' "${1:-}" \
     | grep -oE '"session_id"[[:space:]]*:[[:space:]]*"[^"]+"' \
     | head -1 | sed -E 's/.*"([^"]+)"$/\1/')"
-  : "${OS_SESSION:=nosession}"
+  if [[ "$id" =~ $OS_SESSION_PATTERN ]]; then
+    OS_SESSION="$id"
+  else
+    OS_SESSION="nosession"
+  fi
 }
 
 # The working directory's repository, or every repository one level below it
@@ -65,24 +73,44 @@ os_state_paths() { # sets OS_STATE_DIR, OS_STATE_FILE
   OS_STATE_FILE="$OS_STATE_DIR/.stop-state"
 }
 
+# Every value in the state file is a session id, a checksum, commit hashes or
+# a timestamp, so each one fits this set. The file is read line by line, never
+# run as a script, and a value outside the set is ignored. That also covers a
+# file written by an older version of these hooks.
+OS_STATE_VALUE='^[A-Za-z0-9._:-]*$'
+
 # shellcheck disable=SC2034  # OS_PREV_* are read by the sourcing hook
 os_read_state() {
   OS_PREV_SESSION=""; OS_PREV_FINGERPRINT=""; OS_PREV_HEADS=""; OS_PREV_FIRED_AT=0
   [ -f "$OS_STATE_FILE" ] || return 0
-  # shellcheck disable=SC1090
-  . "$OS_STATE_FILE" 2>/dev/null || true
-  OS_PREV_SESSION="${OS_STATE_SESSION:-}"
-  OS_PREV_FINGERPRINT="${OS_STATE_FINGERPRINT:-}"
-  OS_PREV_HEADS="${OS_STATE_HEADS:-}"
-  OS_PREV_FIRED_AT="${OS_STATE_FIRED_AT:-0}"
+  local key value
+  while IFS='=' read -r key value || [ -n "$key" ]; do
+    [[ "$value" =~ $OS_STATE_VALUE ]] || continue
+    case "$key" in
+      OS_STATE_SESSION) OS_PREV_SESSION="$value" ;;
+      OS_STATE_FINGERPRINT) OS_PREV_FINGERPRINT="$value" ;;
+      OS_STATE_HEADS) OS_PREV_HEADS="$value" ;;
+      OS_STATE_FIRED_AT) [[ "$value" =~ ^[0-9]+$ ]] && OS_PREV_FIRED_AT="$value" ;;
+    esac
+  done 2>/dev/null < "$OS_STATE_FILE"
+}
+
+os_state_line() { # $1 = key, $2 = value; a value outside the set is left empty
+  if [[ "$2" =~ $OS_STATE_VALUE ]]; then
+    printf '%s=%s\n' "$1" "$2"
+  else
+    printf '%s=\n' "$1"
+  fi
 }
 
 os_save_state() { # $1 = timestamp of the last report request
   mkdir -p "$OS_STATE_DIR" 2>/dev/null || return 1
+  local fired="${1:-0}"
+  [[ "$fired" =~ ^[0-9]+$ ]] || fired=0
   {
-    printf 'OS_STATE_SESSION=%s\n' "$OS_SESSION"
-    printf 'OS_STATE_FINGERPRINT=%s\n' "$OS_FINGERPRINT"
-    printf 'OS_STATE_HEADS=%s\n' "$OS_HEADS"
-    printf 'OS_STATE_FIRED_AT=%s\n' "${1:-0}"
+    os_state_line OS_STATE_SESSION "$OS_SESSION"
+    os_state_line OS_STATE_FINGERPRINT "$OS_FINGERPRINT"
+    os_state_line OS_STATE_HEADS "$OS_HEADS"
+    os_state_line OS_STATE_FIRED_AT "$fired"
   } > "$OS_STATE_FILE"
 }

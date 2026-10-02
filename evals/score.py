@@ -490,7 +490,7 @@ def pm_section(folder, pm):
     model and brief, then the two checks the skill's own rules ask for."""
     out = ["", "## What the premortem's report looks like", ""]
     if not pm:
-        out.append("No premortem runs measured yet.")
+        out.append("Not run.")
         return out
     n = max((len(v) for r in pm.values() for v in r.values()), default=0)
     out += [f"Premortem reports: day `{folder.name}`, {n} run{'s' if n != 1 else ''} per brief per model. Three briefs "
@@ -623,7 +623,10 @@ def report(folder, runs, pm_folder=None, pm=None):
            f"Day `{folder.name}`, models {', '.join(label(m) for m in models)}. "
            f"Every phrase asked {per} times per model.",
            (f"Runs sealed off from other sessions (no SendMessage or ListAgents tool): {shut} of {told}."
-            if told else "Runs sealed off from other sessions: these streams do not list their tools."), "",
+            if told else "Whether runs were sealed off from other sessions: not checked, these streams do not list their tools."), "",
+           *([f"A column from a tool other than Claude Code carries the model its runner names, and what counts "
+              "there as a skill switching on is defined in that runner, `evals/agents/<tool>.sh`.", ""]
+             if any(agent_of(m) for m in models) else []),
            "## Did the right skill switch on by itself", "",
            f"| Skill | {head} |", "|" + "---|" * (len(cols) + 1)]
     for s in ordered_skills(runs):
@@ -648,9 +651,12 @@ def report(folder, runs, pm_folder=None, pm=None):
         out.append(f"| `{row[0]}` | {text} | {cells} |")
 
     arms = max((len(r["qual"]["with"]) for r in cols), default=0)
-    out += ["", "## Report quality on the same messy input", "",
-            "Same report, once normally and once with every skill switched off, "
-            f"{arms} runs each.", "Small numbers, read them as a smoke test.", ""]
+    out += ["", "## Report quality on the same messy input", ""]
+    # A day that ran no quality arm, as a Codex day cannot, says so instead of
+    # printing "0 runs each" over an empty table.
+    out += (["Same report, once normally and once with every skill switched off, "
+             f"{arms} runs each.", "Small numbers, read them as a smoke test.", ""]
+            if arms else ["Not run."])
     # A "with" run counts only when a Skill call in it actually ran. Headless,
     # a call nobody allowed is denied, and a with arm whose skills were all
     # denied answered unaided too: its columns would compare the pack against

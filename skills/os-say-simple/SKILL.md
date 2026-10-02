@@ -80,8 +80,8 @@ the sentences around it obey them with the term kept exact.
 
 1. **Add nothing, drop no bad news.** Every warning, risk, number and caveat
    in the source survives the rewrite. A summary that loses the ⚠ line is a
-   lie by omission. Security, data loss and anything hard to undo get spelled
-   out in full - the pack-wide exception applies here too.
+   lie by omission. Security, data loss and anything hard to undo are spelled
+   out in full, never shortened.
 2. **Numbers stay exact.** No rounding money, counts or dates. A ticket or
    pull request number that names an action stays.
 3. **As true as the original, no truer.** The source's claims stay claims:

@@ -21,7 +21,7 @@ an agent running to see what they own.
 Age alone says nothing. Finished code is quiet; so is abandoned code. The two
 read identically in `git log`, which is why a map built on dates alone
 recommends deleting a working product - see
-[`01-quiet-is-not-dead.md`](01-quiet-is-not-dead.md), where six of eight
+[`01-quiet-is-not-dead.md`](01-quiet-is-not-dead.md), where all six
 "stale" modules were load-bearing.
 
 **`stable` is the row that protects the user.** Most quiet code is still

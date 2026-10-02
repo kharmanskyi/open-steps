@@ -26,14 +26,14 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v7
-      # Its scenarios: the two hooks, two through the adapter, three through
-      # the census script of os-big-picture and several through doctor.sh, in
-      # throwaway repositories with a throwaway home directory. Needs no git
-      # identity and touches nothing outside them.
+      # The two hooks, the adapter for Cursor and Gemini CLI, doctor.sh and
+      # the scripts the skills ship, in throwaway repositories with a
+      # throwaway home directory. Needs no git identity and touches nothing
+      # outside them.
       - run: bash hooks/test.sh
       # The measurement scripts, without a model: the scorer on the hand-made
-      # streams in evals/fixtures, the runner against a stand-in `claude` that
-      # records what it was asked. Needs no login.
+      # streams in evals/fixtures, the runners against stand-ins for `claude`
+      # and `codex` that record what they were asked. Needs no login.
       - run: bash evals/test.sh
 
   # Contributions arrive from outside the project and leave again under MIT, so

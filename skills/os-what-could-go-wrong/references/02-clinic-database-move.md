@@ -10,19 +10,19 @@ the report came back "as it came". Both are abridged wherever you see an
 ellipsis, and punctuation is normalised to this repository's style; no wording
 is changed.
 
-Two honest notes on the source. The BEFORE opened with a line saying it could
+Two notes on the source. The BEFORE opened with a line saying it could
 not load this pack's skill - the maintainer's own instructions name it, so the
 agent tried and was refused - and then answered on its own; that opening line
 and the closing status line are left out, the answer between them is
 untouched. The fresh agent in the AFTER checked PostgreSQL's documentation over
-the web where the harness allowed it; two searches and two page fetches were
-refused, and the report says so at its end rather than hiding it.
+the web where Claude Code allowed it; two searches and two page fetches were
+refused, and the report says so at its end.
 
 Kept because it is the technical case. Example 1 is a lease, and this pack
-says a lease and a database migration get the same treatment. Kept also
-because the words: example 1 leaks specialist terms in its detail layer and
-says so; this is the example where the rule holds further down, with the
-residue listed at the end.
+says a lease and a database migration get the same treatment. It is also kept
+for its words. Example 1 leaks specialist terms in its detail layer, and says
+so. In this example the plain-words rule holds further down. The terms that
+remain are listed at the end.
 
 ## The decision, as both were given it
 
@@ -80,8 +80,8 @@ premortem on this plan."
 > - **Extensions.** Whatever you use (`pg_trgm`, `uuid-ossp`, PostGIS, anything
 >   custom) must exist on the managed service at a compatible version...
 > - **Collation.** If the vendor tool does a physical/binary copy and the
->   managed service runs a different glibc, text indexes arrive silently wrong
->   - wrong query results and unique constraints that don't hold, on
+>   managed service runs a different glibc, text indexes arrive silently wrong -
+>   wrong query results and unique constraints that don't hold, on
 >   patient-name data... **Nobody on your team currently knows which mode the
 >   tool uses.** Find out this week.
 > - **Connection limits.** Managed Postgres caps `max_connections` by instance
@@ -305,8 +305,8 @@ see.
 >   and the investigation finds it was never missing, just sorted out of the
 >   page they were looking at.
 > - **Early warning:** What to watch - run the same ten name-ordered and
->   text-range queries on both servers and compare row-for-row · When to worry
->   - any difference at all · When to check - during the rehearsal, and again on
+>   text-range queries on both servers and compare row-for-row · When to worry -
+>   any difference at all · When to check - during the rehearsal, and again on
 >   the night before readmission · What to do then - if the sorts differ,
 >   decide deliberately: rebuild affected indexes and accept the new order, or
 >   match the old collation on the target.
@@ -352,9 +352,10 @@ with nothing beside them.
    example never ran the skill: Claude Code 2.1.222 refuses an inline `cat` of
    a file outside the session's working directory, and a refused inline
    command aborts the whole skill. The agent wrote its own analysis and said
-   the skill was blocked, which is honest and not the skill. The prompt is now
-   inlined through `scripts/prompt.sh`, which the same harness does not
-   refuse; the run above is the one made after that change.
+   the skill was blocked. That answer was honest, but it was not the skill's
+   output. The prompt is now inlined through `scripts/prompt.sh`, which the
+   same Claude Code version does not refuse; the run above is the one made
+   after that change.
 2. **Nothing in the report format changed.** On a technical decision the shape
    held as written: the verdict first, nine lines for nine areas, one card per
    surviving risk (seven survived), the cross-cutting findings each in their

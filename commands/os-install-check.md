@@ -16,10 +16,10 @@ This command adds nothing to it and takes nothing away.
 
 ## Language
 
-The language the user speaks in this session, detected from the conversation -
-translate every label. File names, paths and setting names stay as they are.
+The language the user speaks in this session, detected from the conversation.
+Translate every label. File names, paths and setting names stay as they are.
 
-## Step 1 - run the script
+## Step 1: run the script
 
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/doctor.sh"
@@ -30,7 +30,7 @@ Keep the exit code. The last line of the report needs it.
 If the script does not run at all, say so and stop there. Never describe a
 result you did not see.
 
-## Step 2 - read the result back
+## Step 2: read the result back
 
 The script prints one label at the start of every line. Keep the four apart.
 
@@ -66,7 +66,7 @@ Close with the exit code and what it means:
 9  faults in more than one of those
 ```
 
-## Hard rules - these rules *are* the command
+## Hard rules: these rules *are* the command
 
 1. Report what the script printed. Add nothing to it.
 2. Never soften a fault. A fault is reported in full, in its own line.

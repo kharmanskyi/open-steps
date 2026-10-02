@@ -39,7 +39,7 @@ before it, all in the vendor's vocabulary.
 > on the dashboard itself.
 >
 > **Sign-in?**
-> - Keep the password (Recommended) - nothing to build; add sign-in the day a second person needs in
+> - Keep the password (Recommended) - nothing to build; add sign-in the day a second person needs it
 > - Add real sign-in now - roughly half a day to a day, then inviting people by hand
 
 ## What the rewrite did

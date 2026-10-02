@@ -1,17 +1,20 @@
 {
   "name": "open-steps",
-  "description": "Skills that keep development open to the person running it, who does not read code: plain-language session reports, followable operator instructions, decisions framed as questions with a recommendation, an attack on a decision while it can still be changed, what-to-do-next orchestration, verification of work done in other sessions, on-demand restatement of any text in plain words, and one standing file with the whole picture of the product.",
-  "version": "0.4.5",
+  "description": "Plain-language skills for coding agents, for the person running development who does not read code: session reports, decisions, next steps and the whole picture.",
+  "version": "0.4.6",
   "license": "MIT",
   "keywords": [
     "claude-code",
     "agent-skills",
+    "coding-agents",
     "session-report",
     "premortem",
-    "plain-language",
-    "orchestration"
+    "plain-language"
   ],
   "author": {
-    "name": "Pavlo Kharmanskyi"
-  }
+    "name": "Pavlo Kharmanskyi",
+    "url": "https://github.com/kharmanskyi"
+  },
+  "homepage": "https://opensteps.ai",
+  "repository": "https://github.com/kharmanskyi/open-steps"
 }

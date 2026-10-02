@@ -19,14 +19,14 @@ allowed-tools:
 
 # os-done-or-not
 
-One question, one screen: **did the agent finish, and what actually happened**
-- in words a reader who does not code will understand. Nothing happened (pure
+One question, one screen: **did the agent finish, and what actually happened**,
+in words a reader who does not code will understand. Nothing happened (pure
 questions, no files touched) → one line saying so, no report.
 
 ## Language
 
-The language the user speaks in this session, detected from the conversation
-- translate every template label. Code, files, commands stay English.
+The user's language in this session, detected from the conversation. Translate
+every template label. Code, files, commands stay English.
 
 ## Step 1 - gather proof that takes seconds
 
@@ -37,7 +37,7 @@ checked"**, never "yes".
 ```bash
 git status --porcelain            # uncommitted?
 git log --oneline -10             # what landed
-git log origin/HEAD..HEAD --oneline 2>/dev/null   # unpushed?
+git log HEAD --not --remotes --oneline 2>/dev/null | head -20   # unpushed? (no remote: say so)
 gh pr view --json state,mergeStateStatus && gh pr checks   # if a PR exists
 ```
 
@@ -92,10 +92,13 @@ reaching users is a surprise - a ⚠️ row.
 
 ## Step 4 - save it
 
-Write to both paths, creating directories as needed - never anywhere else
-under `~/.claude`, never into the user's project:
-- `~/.claude/open-steps/reports/<project-folder-name>/latest.md` - overwritten
-- `~/.claude/open-steps/reports/<project-folder-name>/history/<YYYY-MM-DD-HHMM>.md`
+Write both, creating folders as needed. The paths are the same on every tool.
+If the file tool refuses them as outside the workspace, use the shell. Save
+nowhere else, and never in the user's project. `<project>` is the name of the
+folder the session started in, or of its repository's top folder when it is
+inside one (the name only, not the path):
+- `~/.claude/open-steps/reports/<project>/latest.md` (overwritten)
+- `~/.claude/open-steps/reports/<project>/history/<YYYY-MM-DD-HHMM>.md`
 
 Head the file with date, project, ticket. **Two parts; only part one goes in
 the chat.** Part one - the report above, for the person. Part two - for the
@@ -121,10 +124,8 @@ of the product, and this is the moment it goes out of date. Use the
 feature, a stage that moved, a deferred item joining the backlog.
 
 Skip it in two cases only: outcome 8, or no `BIG-PICTURE.md` and the user has
-never asked for one. A session that changed no row is **not** a third case - the map
-is not a second copy of the report, but its measured columns went a day stale
-while this session ran, and that pass is what refreshes them. The map is not
-skipped for having nothing to say; it is skipped for not existing.
+never asked for one. A session that changed no row still runs it, because the
+map's measured columns went stale while the session ran.
 
 ## Jargon → plain words
 

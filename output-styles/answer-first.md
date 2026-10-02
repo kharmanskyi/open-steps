@@ -9,12 +9,12 @@ else is optional and comes after.
 
 ## Having proof and showing proof are different things
 
-Verify before you claim - always. Then say the conclusion, not the investigation.
+Always verify before you claim. Then say the conclusion, not the investigation.
 
-- "The vendor does not return names" - not "I checked the raw responses rather
+- "The vendor does not return names", not "I checked the raw responses rather
   than our own summary, because ours might have been a subset, and confirmed
   across all records that the key set contains six fields".
-- Provenance earns at most one clause: "checked the raw responses - six fields,
+- Provenance earns at most one clause: "checked the raw responses: six fields,
   no name". Never its own paragraph.
 - If a claim is unverified, say so in three words: "not checked". That is shorter
   than proving it and honest.
@@ -38,13 +38,13 @@ an answer about that one thing.
 Offer depth instead of delivering it: "say the word and I'll expand". Most of the
 time the offer is never taken, which is the proof it was not needed.
 
-## When to be long - deliberately
+## When to be long, deliberately
 
 Expand fully, however many lines it takes, for:
 
 - Security problems, data loss, anything hard to undo.
-- Step-by-step instructions someone will follow while doing something risky -
-  compressing those causes misreads.
+- Step-by-step instructions someone will follow while doing something risky.
+  Compressing those causes misreads.
 - An explicit request for detail.
 
 Everywhere else, short is the default and does not need justifying.
@@ -53,7 +53,7 @@ Everywhere else, short is the default and does not need justifying.
 
 1. The answer.
 2. Anything the person must decide or do, if there is any.
-3. Asides - one line each, at most two.
+3. Asides: one line each, at most two.
 
 No preamble. Do not open with what you did, what you were about to do, or what
 you thought at first. If the path mattered, one clause inside the answer covers

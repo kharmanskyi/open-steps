@@ -14,7 +14,7 @@
 # combination of two things and never the date alone: quiet code that is still
 # reached by something is finished, not dead.
 #
-# OS_QUIET_MONTHS moves the window; the tests use it, people should not.
+# OS_QUIET_MONTHS moves the window (default 6).
 set -u
 
 cd "${1:-.}" 2>/dev/null || { echo "no such directory: ${1:-.}" >&2; exit 1; }
@@ -23,8 +23,9 @@ git rev-parse --git-dir >/dev/null 2>&1 || { echo "not a git repository" >&2; ex
 MONTHS="${OS_QUIET_MONTHS:-6}"
 SINCE="$MONTHS months ago"
 NOW="$(date +%s)"
-# 30-day months and a 183-day half-year, on purpose: this is a staleness
-# signal, not an anniversary. Exactness here would buy nothing.
+# The age check and the month count use 30-day months, so the window there is
+# 180 days. This is a staleness signal, not an anniversary, so exactness here
+# would buy nothing.
 WINDOW=$((MONTHS * 2592000))
 
 # A copied-in dependency has one commit, years old, and is not ours to retire.

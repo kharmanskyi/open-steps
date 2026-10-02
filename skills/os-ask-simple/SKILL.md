@@ -54,12 +54,14 @@ What changes later: <one line>
 Easy to undo: <yes, and how - or no, and why>
 ```
 
-Then the options through the native picker: two to four, each with a one-line
+Then the options, through your tool's question picker where it has one (in
+Claude Code, AskUserQuestion). Offer two to four, each with a one-line
 trade-off in plain words, the recommended one first and marked `(Recommended)`.
 
-Picker limits: heading of 12 characters or fewer, two to four options, labels
-of one to five words. Where the picker is not available, write the same content
-as plain text.
+Keep the heading to 12 characters or fewer and each label to one to five
+words. Claude Code's picker has the same limits, and short labels read well as
+plain text too. Where there is no picker, write the same question and options
+as plain text, the recommended one first and marked.
 
 ## Full form - six checks, for structural choices
 

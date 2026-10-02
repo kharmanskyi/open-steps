@@ -11,6 +11,31 @@ body:
         to be agreed in words before anyone writes it.
     validations:
       required: true
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Which tool
+      description: Optional. Leave it empty if this is an idea and not about one tool.
+      options:
+        - Claude Code
+        - Codex CLI
+        - Cursor CLI
+        - Cursor desktop app
+        - Gemini CLI
+        - Another tool
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: Tool version and operating system
+      description: >
+        Optional. The version your tool prints, and your system. For an install
+        problem, paste the output of `bash open-steps/doctor.sh` in the next box.
+        Take out anything private first.
+      placeholder: "For example: Gemini CLI 0.58.0 on Windows 11"
+    validations:
+      required: false
   - type: textarea
     id: paste
     attributes:

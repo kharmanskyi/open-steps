@@ -11,7 +11,7 @@
 #
 # Claude Code by default. Another tool is a runner in evals/agents/, named by
 # EVAL_AGENT, and its model names are that tool's own:
-#   EVAL_AGENT=gemini-cli EVAL_MODEL=gemini-2.5-pro bash evals/run.sh
+#   EVAL_AGENT=codex EVAL_MODEL=gpt-6-sol EVAL_ONLY="activation negatives" bash evals/run.sh
 # A path with a slash in it is used as the runner as it is, so a runner can
 # be tried before it lives in the folder. evals/README.md, "Measuring another
 # agent", is the contract a runner has to keep.
@@ -74,7 +74,7 @@ elif command -v gtimeout >/dev/null 2>&1; then TIMEOUT_BIN="gtimeout"
 else TIMEOUT_BIN=""; fi
 PHASES="${EVAL_ONLY:-activation negatives quality premortem}"
 want() { case " $PHASES " in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
-# A full sweep is 234 separate agent runs, so it is 234 transcripts. They live
+# Every run of a sweep is one separate agent run and one transcript. They live
 # outside the repository, next to where the pack keeps its reports: one folder
 # per day, every model in it, each file carrying its model in the name, and
 # the agent's name in front of it when the agent is not Claude Code. Running

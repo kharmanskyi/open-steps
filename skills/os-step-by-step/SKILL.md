@@ -103,6 +103,10 @@ otherwise undetectable:
 printf 'Enter the token: '; IFS= read -rs A; echo; printf 'Enter it again: '; IFS= read -rs B; echo; if [ "$A" != "$B" ]; then echo "The two entries differ - nothing saved, run it again."; else printf '%s' "$A" | (umask 077; cat > /path/to/secret) && echo "Saved, $(wc -c < /path/to/secret) bytes"; fi; unset A B
 ```
 
+These templates are for bash and zsh and have not been run on Windows. There,
+ask the user to open a separate Git Bash window just for this command, and to
+leave the agent running where it is. Never write an unchecked PowerShell one.
+
 Two properties the templates cannot keep for you, both measured:
 
 - **`printf …; IFS= read -rs VAR` - never `read -rsp`.** In zsh `-p` means
@@ -124,10 +128,11 @@ happened, so pressing Enter never feels like dropping a coin into a well.
 
 ## Choices, not instructions
 
-A *decision* gets no steps. Use the native picker with the pack's contract:
-plain question, why it matters, what changes later, easy to undo, two to four
-options, the recommended one first and marked. Where the picker is not
-available, write the same content as plain text.
+A *decision* gets no steps. Use your tool's question picker where it has one
+(in Claude Code, AskUserQuestion), with the pack's contract: plain question,
+why it matters, what changes later, easy to undo, two to four options, the
+recommended one first and marked. Where there is no picker, write the same
+question and options as plain text, the recommended one first and marked.
 
 ## Hard rules
 
@@ -138,7 +143,8 @@ available, write the same content as plain text.
    server, their own machine. Look-alike steps on different targets: say what
    happens if they are swapped.
 4. **A command is self-contained.** One line the user pastes and runs; if it
-   needs a value, it asks for it. Never input redirection, heredocs, Ctrl-D.
+   needs a value, it asks for it. Never make the user feed input by
+   redirection, a heredoc or Ctrl-D.
 5. **No jargon inside a step.** Avoid terms instead of explaining them: write
    what the person sees and clicks. One unavoidable term may stay - without a
    lecture.

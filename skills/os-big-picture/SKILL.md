@@ -57,10 +57,9 @@ or `Signal` back out of the file - only `Stage` and the queue carry forward.
 bash ${CLAUDE_SKILL_DIR}/scripts/census.sh .
 ```
 
-Outside Claude Code `${CLAUDE_SKILL_DIR}` is usually not set, so that path
-does not exist. There, run `scripts/census.sh` from the folder this `SKILL.md`
-is in, with the same `.` argument. If the script cannot be run at all, say so
-and mark every measured column "not checked"; never estimate them.
+Where your tool does not set `${CLAUDE_SKILL_DIR}`, run it from the project
+root as `bash <this skill's folder>/scripts/census.sh .`. If it cannot run at
+all, say so and mark every measured column "not checked"; never estimate them.
 
 An `AGE` line, then one measured `PART` row per part: path, last worked on,
 commits in six months, whether anything outside reaches it, the signal.
@@ -74,10 +73,10 @@ commits in six months, whether anything outside reaches it, the signal.
 | `unused - N months` | Quiet, and nothing reaches it | The only real retire candidate |
 
 **When the `AGE` line says `young`**, write one line directly above the table,
-before the header row: *"This project is N days old. Nothing here can be quiet
-for six months yet, so the Signal column will only start to mean something from
-the date the script gave."* Every `active` is then a fact about the
-calendar, not the code. On an `ok` line, write no such note.
+with the day count and date from the `AGE` line: *"This project is N days old.
+Nothing here can be quiet for six months yet, so the Signal column starts to
+mean something on DATE."* Every `active` is then a fact about the calendar,
+not the code. On an `ok` line, write no such note.
 
 ## Step 4 - the backlog, sourced and never invented
 

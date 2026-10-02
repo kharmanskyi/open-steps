@@ -11,8 +11,8 @@ It listed the directories it could think of, sorted them by date, and called
 everything old a candidate for deletion.
 
 > **Stale, consider removing:** `notifier/` (7 months), `geocode/` (9 months),
-> `pdf/` (11 months), `retry/` (7 months), `csvimport/` (10 months),
-> `webhooks/` (8 months).
+> `pdf/` (10 months), `retry/` (7 months), `csvimport/` (8 months),
+> `webhooks/` (6 months).
 >
 > Six of eleven modules are unmaintained. Recommend a cleanup sprint.
 
@@ -47,12 +47,13 @@ rather than from memory.
 > | Receipts | Makes the PDF receipt | live (21 Sep) | 21 Sep | stable |
 > | Spreadsheet import | Bulk-adds parcels from a file | not checked | 4 Dec | stable |
 > | Partner callbacks | Tells a shop's own system | live (2 Feb) | 2 Feb | stable |
-> | **Old SMS sender** | Sent texts before we moved to email | not checked | 18 Mar | **unused - 11 months** |
+> | Retries | Tries a carrier again when it times out | live (10 Jan) | 10 Jan | stable |
+> | **Old SMS sender** | Sent texts before we moved to email | not checked | 12 Sep | **unused - 11 months** |
 >
 > ## Worth retiring
 >
-> - **Old SMS sender.** Nothing has called it since the switch to email in
->   March, and no build or deploy script mentions it. It still holds the
+> - **Old SMS sender.** Nothing has called it since the switch to email last
+>   September, and no build or deploy script mentions it. It still holds the
 >   Twilio credentials. Removing it is about an hour.
 >
 > ## What is next

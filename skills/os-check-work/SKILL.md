@@ -35,15 +35,17 @@ conversation. Code, file names and identifiers stay English.
 
 - A report is a claim by the party being assessed, and its adjectives are not
   measurements: "tests are green" vs the count that ran. Ask for the number.
-- "Done" is a snapshot: reviews get revoked, branches fall behind, checks flip
-  - often with no new commit. Re-read immediately before you act.
+- "Done" is a snapshot. Reviews get revoked, branches fall behind and checks
+  flip, often with no new commit. Re-read immediately before you act.
 
 ## Two modes
 
 Plural is a **sweep**: every sibling session, one line each, statuses only.
 Singular - "accept this", a named session or pull request - is an **accept**:
 full verification, then acceptance. A sweep that finds verified-ready work
-rolls into accepting it - the accept steps run first, never skipped.
+rolls into accepting it - the accept steps run first, never skipped. Where
+your tool cannot list other sessions, sweep the open pull requests instead
+(`gh pr list`) and say so.
 
 ## Sweep
 
