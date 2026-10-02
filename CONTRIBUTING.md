@@ -59,13 +59,13 @@ These notes are about Claude Code only, since the other tools ignore
 
 ## Measuring another tool
 
-Want the evals to measure another tool? Runners for
-[Gemini CLI](https://github.com/kharmanskyi/open-steps/issues/38) and
-[Cursor](https://github.com/kharmanskyi/open-steps/issues/40) are open issues.
+Want the evals to measure another tool? A runner for
+[Cursor](https://github.com/kharmanskyi/open-steps/issues/40) is an open issue.
 The contract is in
-[Measuring another agent](evals/README.md#measuring-another-agent), and
+[Measuring another agent](evals/README.md#measuring-another-agent);
 `evals/agents/codex.sh`, the Codex CLI runner, is a worked example for a tool
-with no skill tool.
+with no skill tool, and `evals/agents/gemini-cli.sh`, the Gemini CLI runner,
+for a tool with one.
 
 ## Tests
 
@@ -73,7 +73,7 @@ with no skill tool.
 `doctor.sh` and the scripts the skills ship. It uses throwaway repositories
 and a throwaway home folder, so it touches nothing of yours.
 `bash evals/test.sh` tests the scorer and the runners. It uses stand-ins for
-`claude` and `codex`, so no model is called. Neither needs Claude Code. To run
+`claude`, `codex` and `gemini`, so no model is called. Neither needs Claude Code. To run
 a hook by hand, add `</dev/null`. Each hook reads from standard input, and
 without it the hook waits for a payload that never comes.
 

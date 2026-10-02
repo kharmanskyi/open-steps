@@ -2,7 +2,7 @@
 # Checks for the measurement scripts. Run from anywhere:  bash evals/test.sh
 # Nothing here talks to a model. The scorer reads the hand-made streams in
 # fixtures/.
-# The runners are driven with a stand-in `claude` or `codex` on PATH that
+# The runners are driven with a stand-in `claude`, `codex` or `gemini` on PATH that
 # writes down what it was asked and answers with a short stream. HOME points
 # at a throwaway folder, so nothing of yours is read or written.
 
@@ -414,6 +414,90 @@ check "a run that opened the skill asked for is a hit, and one that opened only 
   "$(has "$out" '| `os-done-or-not` | 1/2 |')"
 check "a day with no quality or premortem runs says both were not run" 2 "$(count "$out" -x 'Not run.')"
 check "a column from another tool says where its meaning is defined" yes "$(has "$out" 'defined in that runner')"
+
+echo "CASE 14  the Gemini CLI runner turns an activate_skill call into one Skill call"
+H="$(mktemp -d)"
+new_stubs
+# A stand-in gemini: writes down its arguments and what arrived on stdin,
+# then answers with events in the shape `gemini -p -o stream-json` writes.
+# A Skill call's id is the call's own id. The calls in it:
+#   call_1  activates os-done-or-not; the tool comes back not registered,
+#           as it does headless without --yolo
+#   call_2  activates os-big-picture, and this one succeeds
+#   call_3  activates a skill that is not the pack's: no line
+#   call_4  reads os-say-simple's SKILL.md with the file tool: no line
+#   call_5  runs a shell command: no line
+# The answer arrives in two delta pieces and one whole message.
+stand_in gemini <<'STUB'
+#!/usr/bin/env bash
+stub-record "$@"
+cat > "$STUB_STDIN"
+[ -n "${STUB_FAIL:-}" ] && { echo "Authentication failed" >&2; exit 1; }
+cat <<'J'
+{"type":"init","timestamp":"t","session_id":"s-1","model":"gemini-3.5-flash-lite"}
+{"type":"message","timestamp":"t","role":"user","content":"<hook_context>...</hook_context>\n\nAre we done?"}
+{"type":"tool_use","timestamp":"t","tool_name":"activate_skill","tool_id":"activate_skill__call_1","parameters":{"name":"os-done-or-not"}}
+{"type":"tool_result","timestamp":"t","tool_id":"activate_skill__call_1","status":"error","output":"Tool \"activate_skill\" not found.","error":{"type":"tool_not_registered","message":"Tool \"activate_skill\" not found."}}
+{"type":"tool_use","timestamp":"t","tool_name":"activate_skill","tool_id":"activate_skill__call_2","parameters":{"name":"os-big-picture"}}
+{"type":"tool_result","timestamp":"t","tool_id":"activate_skill__call_2","status":"success","output":"Skill **os-big-picture** activated."}
+{"type":"tool_use","timestamp":"t","tool_name":"activate_skill","tool_id":"activate_skill__call_3","parameters":{"name":"someone-elses-skill"}}
+{"type":"tool_result","timestamp":"t","tool_id":"activate_skill__call_3","status":"error","output":"Skill \"someone-elses-skill\" not found.","error":{"type":"invalid_tool_params","message":"Skill not found."}}
+{"type":"tool_use","timestamp":"t","tool_name":"read_file","tool_id":"read_file__call_4","parameters":{"file_path":"/home/u/.agents/skills/os-say-simple/SKILL.md"}}
+{"type":"tool_result","timestamp":"t","tool_id":"read_file__call_4","status":"error","output":"Path not in workspace","error":{"type":"invalid_tool_params","message":"Path not in workspace"}}
+{"type":"tool_use","timestamp":"t","tool_name":"run_shell_command","tool_id":"run_shell_command__call_5","parameters":{"command":"cat ~/.agents/skills/os-check-work/SKILL.md"}}
+{"type":"tool_result","timestamp":"t","tool_id":"run_shell_command__call_5","status":"error","output":"Tool \"run_shell_command\" not found.","error":{"type":"tool_not_registered","message":"Tool \"run_shell_command\" not found."}}
+{"type":"message","timestamp":"t","role":"assistant","content":"Done: ","delta":true}
+{"type":"message","timestamp":"t","role":"assistant","content":"yes.","delta":true}
+{"type":"message","timestamp":"t","role":"assistant","content":" Nothing landed."}
+J
+if [ -n "${STUB_UNFINISHED:-}" ]; then
+  echo '{"type":"result","timestamp":"t","status":"error","error":{"type":"RESOURCE_EXHAUSTED","message":"quota"},"stats":{"total_tokens":1}}'
+else
+  echo '{"type":"result","timestamp":"t","status":"success","stats":{"total_tokens":1,"tool_calls":5}}'
+fi
+STUB
+out="$(cd "$STUB" && echo "piped" | HOME="$H" PATH="$STUB:$PATH" \
+  bash "$PACK/evals/agents/gemini-cli.sh" plain gemini-3.5-flash-lite "Are we done?")"
+check "the runner finishes" 0 $?
+check "one headless run in the stream shape, untrusted, the prompt and the model passed through" 1 \
+  "$(grep -c -- "^-p${TAB}Are we done?${TAB}-m${TAB}gemini-3.5-flash-lite${TAB}-o${TAB}stream-json${TAB}--skip-trust${TAB}$" "$STUB_LOG")"
+check "nothing piped reaches gemini, so the phrase arrives alone" 0 "$(wc -c < "$STUB_STDIN" | tr -d ' ')"
+check "the init line names the model the stream carries and the agent" 1 \
+  "$(count "$out" '"subtype": "init", "model": "gemini-3.5-flash-lite", "agent": "gemini-cli"')"
+check "one Skill call per pack skill activated, none for another skill, a file read or a shell command" 2 \
+  "$(count "$out" '"name": "Skill"')"
+check "the call carries the tool's own id and the skill's short name" 1 \
+  "$(count "$out" '"id": "activate_skill__call_1", "name": "Skill", "input": {"skill": "os-done-or-not"}')"
+check "a call that came back not registered is listed as refused, one that ran is not" 1 \
+  "$(count "$out" '"permission_denials": \[{"tool_name": "Skill", "tool_use_id": "activate_skill__call_1"}\]')"
+check "the result line carries the answer, delta pieces and whole messages joined" 1 \
+  "$(count "$out" '"type": "result", "result": "Done: yes. Nothing landed."')"
+check "gemini's own events pass through" 1 "$(count "$out" '"type": "tool_result", "timestamp": "t", "tool_id": "activate_skill__call_2"')"
+out="$(cd "$STUB" && HOME="$H" STUB_UNFINISHED=1 PATH="$STUB:$PATH" \
+  bash "$PACK/evals/agents/gemini-cli.sh" plain gemini-3.5-flash-lite "Are we done?" 2>/dev/null)"
+check "a run whose result is an error writes no result line, so the scorer sees it unfinished" 0 \
+  "$(count "$out" '"type": "result", "result":')"
+check "and still keeps the call the model made" 1 "$(count "$out" '"skill": "os-done-or-not"')"
+( cd "$STUB" && HOME="$H" STUB_FAIL=1 PATH="$STUB:$PATH" bash "$PACK/evals/agents/gemini-cli.sh" plain gemini-3.5-flash-lite "say just: ok" >/dev/null 2>&1 )
+check "a gemini that fails fails the runner, so the auth check stops the sweep" 1 $?
+for arm in with without; do
+  err="$(HOME="$H" PATH="$STUB:$PATH" bash "$PACK/evals/agents/gemini-cli.sh" "$arm" gemini-3.5-flash-lite x 2>&1 >/dev/null)"
+  check "the $arm arm exits 2" 2 $?
+  check "with one line on stderr" 1 "$(printf '%s\n' "$err" | grep -c .)"
+done
+rm -rf "$H" "$STUB"
+# fixtures/gemini-cli/ is hand-made in the shape this runner writes, Gemini's
+# own events kept: an init line after Gemini's, each Skill call as its
+# activate_skill call arrives, under the call's own id, and a result line
+# listing the calls that came back not registered. In the run of the first
+# os-done-or-not phrase the agent activated that skill and then
+# os-big-picture; in the run of the second it activated os-big-picture alone,
+# the wrong skill, which is a miss.
+out="$(score gemini-cli)"
+check "the scorer labels the Gemini CLI column by its models.md row" yes \
+  "$(has "$out" '| Skill | Gemini 3.5 Flash Lite (Gemini CLI) |')"
+check "an activation the tool refused still counts as the model's choice: a hit for the right skill, a miss for another" yes \
+  "$(has "$out" '| `os-done-or-not` | 1/2 |')"
 
 echo
 echo "$pass passed, $fail failed"

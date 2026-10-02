@@ -45,7 +45,9 @@ scripts in between, and a check that keeps the scripts honest.
 - **`score.py` does the counting.** No AI judges anything here. Whether a skill
   switched on comes from the log of what the agent called; on Codex, which has
   no skill tool, `agents/codex.sh` writes that log from the agent's reads of a
-  skill's `SKILL.md`, as the header of that script defines. Quality comes from
+  skill's `SKILL.md`, and on Gemini CLI `agents/gemini-cli.sh` writes it from
+  the agent's calls of its activate_skill tool, as the header of each script
+  defines. Quality comes from
   plain word checks: is the verdict block there, is there a warning row, how
   long is the answer, did any commit codes leak through, how much jargon is
   left. Whether the `with` arm really had the pack loaded comes from the same
@@ -132,7 +134,8 @@ bash evals/test.sh
 ## Measuring another agent
 
 `run.sh` decides what to ask and when; one script per tool does the asking.
-Claude Code's is `agents/claude.sh`, and Codex CLI's is `agents/codex.sh`.
+Claude Code's is `agents/claude.sh`, Codex CLI's is `agents/codex.sh`, and
+Gemini CLI's is `agents/gemini-cli.sh`.
 `EVAL_AGENT` picks another by name from the same folder, or by path while it
 is still being written, and the model names are then that tool's own:
 
@@ -178,8 +181,10 @@ A runner is one executable file that keeps five promises.
 arguments arrive in order, the auth check goes through the runner too, the
 stream files carry the agent's name, and a Claude model id under another
 agent never wears a Claude tier name. CASE 13 puts the Codex runner through a
-stand-in `codex` that answers in the shape `codex exec --json` writes. Try a
-new runner the same way before the first paid run, then with one real phrase.
+stand-in `codex` that answers in the shape `codex exec --json` writes, and
+CASE 14 the Gemini CLI runner through a stand-in `gemini` that answers in the
+shape `gemini -p -o stream-json` writes. Try a new runner the same way before
+the first paid run, then with one real phrase.
 A day measured through it is scored on its own, never into `results.md`:
 `python3 evals/score.py --print <that day> > evals/results-<agent>.md`, as
 `results-codex.md` was. A pull request that adds a runner hands its
