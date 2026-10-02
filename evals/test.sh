@@ -259,5 +259,10 @@ check "the runs are counted apart, and a run that died is routed to its agent by
   "$(has "$out" '| `os-done-or-not` | 1/1 | 0/2 |')"
 
 echo
+echo "CASE 13  Cursor fixture is labelled by its models.md row and counts Skill activation"
+out="$(score cursor-runner)"
+check "the Cursor column uses its models.md label" yes "$(has "$out" '| Skill | Cursor Auto |')"
+check "the Cursor Skill line is counted as one activation" yes "$(has "$out" '| `os-done-or-not` | 1/1 |')"
+echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

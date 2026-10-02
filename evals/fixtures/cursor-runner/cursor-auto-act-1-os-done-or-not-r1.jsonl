@@ -1,0 +1,3 @@
+{"type":"system","subtype":"init","model":"Auto","agent":"cursor","tools":["shell","read_file"]}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"cursor-skill-1","name":"Skill","input":{"skill":"os-done-or-not"}}]}}
+{"type":"result","result":"done","permission_denials":[]}
