@@ -27,4 +27,5 @@ One rule if you edit the table: no `|` inside a cell, it splits the cell.
 | claude-haiku-4-5 | Haiku 4.5 |
 | claude-sonnet-5 | Sonnet 5 |
 | claude-opus-5 | Opus 5 |
+| cursor:Auto | Cursor Auto |
 | codex:gpt-6-sol | GPT-6 Sol (Codex) |

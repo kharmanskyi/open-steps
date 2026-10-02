@@ -416,5 +416,10 @@ check "a day with no quality or premortem runs says both were not run" 2 "$(coun
 check "a column from another tool says where its meaning is defined" yes "$(has "$out" 'defined in that runner')"
 
 echo
+echo "CASE 13  Cursor fixture is labelled by its models.md row and counts Skill activation"
+out="$(score cursor-runner)"
+check "the Cursor column uses its models.md label" yes "$(has "$out" '| Skill | Cursor Auto |')"
+check "the Cursor Skill line is counted as one activation" yes "$(has "$out" '| `os-done-or-not` | 1/1 |')"
+echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]
