@@ -356,17 +356,26 @@ It reads files and changes nothing. Each line is marked `ok`, `FAULT`,
 `not checked` or `fact`. A `fact` is something it looked at and does not judge.
 
 - **The skills:** it checks every copy it finds in `~/.agents/skills/` and in
-  each tool's own folder.
+  each tool's own folder: every skill of the pack is there, each has a sound
+  header, and each brought its `references/` and `scripts/` folders along. A
+  copy in the shared folder with none of the three tools on the machine is
+  "not checked": another tool that reads that folder may be using it.
 - **Codex CLI:** once it can tell the install is for Codex, it checks the
   routing block in `~/.codex/AGENTS.md`. It checks that `~/.codex/config.toml`
-  sets up both hooks and that each one points at a real file. A shared copy
-  that could be for another tool, with no Codex file that mentions the pack,
-  is reported as a fact. The `doctor.sh` header has the exact rule. It cannot
-  see whether you trusted the hooks.
+  sets up both hooks and that each one runs a real file of this pack, marked
+  runnable, with `fingerprint.sh` beside it. A hook of the same file name from
+  another pack is reported as a fact, not taken for ours. A shared copy that
+  could be for another tool, with no Codex file that mentions the pack, is a
+  fact. The `doctor.sh` header has the exact rule. It cannot see whether you
+  trusted the hooks.
 - **Cursor CLI and Gemini CLI:** it reports the routing block in `GEMINI.md`
-  and the hook commands it finds, without judging them. It checks one thing:
-  the path in front of `adapter.sh` is a real file and not the example path.
-  It does not check Cursor's `AGENTS.md`, since that one sits in each project.
+  as a fact and judges the hooks: each adapter command sits under the right
+  event (`sessionStart` and `stop` on Cursor, `SessionStart` and `AfterAgent`
+  on Gemini CLI), the path in front of `adapter.sh` is a real file and not the
+  example path, the adapter is marked runnable where the command runs it
+  directly, and the two hook scripts are beside it. A tool wired for the pack
+  with no copy of the skills is a fault that names that tool. It does not
+  check Cursor's `AGENTS.md`, since that one sits in each project.
 
 To update or remove the pack, see
 [Codex CLI, Cursor CLI and Gemini CLI](../README.md#codex-cli-cursor-cli-and-gemini-cli)

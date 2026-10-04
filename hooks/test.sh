@@ -353,16 +353,9 @@ check "and puts the agent's own words after it, never in its place" 0 $?
 [ "$(wc -l < "$SK/SKILL.md" | tr -d ' ')" -le 150 ]
 check "the skill fits its 150-line ceiling" 0 $?
 
-echo "CASE 18  the doctor on Codex, Cursor and Gemini CLI installs"
-# Codex, Cursor and Gemini CLI read one skills folder, ~/.agents/skills, and
-# each has a folder of its own too. The doctor once took any copy in the shared
-# folder as a Codex install and judged every machine as if Claude Code were on
-# it, so a correct install on any of the three read as broken, with exit 9.
-# Each home below is a correct install as docs/other-agents.md describes it.
-# The doctor runs with only HOME and a PATH holding the tools it calls, so a
-# claude command on the machine running this suite cannot leak in. Two-sided:
-# a real fault in each still reads as one.
-err="$(mktemp)"
+# Helpers for the doctor cases, CASE 18 and CASE 20. The doctor runs with only
+# HOME and a PATH holding the tools it calls, so a claude command on the machine
+# running this suite cannot leak in. Each case makes its own err file.
 dhome() {
   H="$(mktemp -d)"
   mkdir -p "$H/bin"
@@ -411,6 +404,17 @@ wire_claude() {
   cat "$PACK/docs/routing-block.md" > "$H/.claude/CLAUDE.md"
 }
 fake_claude() { printf '#!/bin/sh\nexit 0\n' > "$H/bin/claude" && chmod +x "$H/bin/claude"; }
+
+echo "CASE 18  the doctor on Codex, Cursor and Gemini CLI installs"
+# Codex, Cursor and Gemini CLI read one skills folder, ~/.agents/skills, and
+# each has a folder of its own too. The doctor once took any copy in the shared
+# folder as a Codex install and judged every machine as if Claude Code were on
+# it, so a correct install on any of the three read as broken, with exit 9.
+# Each home below is a correct install as docs/other-agents.md describes it.
+# The doctor runs with only HOME and a PATH holding the tools it calls, so a
+# claude command on the machine running this suite cannot leak in. Two-sided:
+# a real fault in each still reads as one.
+err="$(mktemp)"
 
 dhome; shared; wire_gemini
 # The hooks keep their reports under ~/.claude on every tool, so after one
@@ -656,9 +660,9 @@ check "a shared copy no tool reads does not excuse a Claude Code without the plu
 check "and the exit code says so" 9 "$code"
 dhome; shared
 out="$(doctor)"; code=$?
-said '^  FAULT +The pack was found for no tool: its skills are in .*/\.agents/skills, but'
-check "a shared copy with no tool and no Claude Code: the pack is found for no tool" 0 $?
-check "and the exit code names the skills" 1 "$code"
+said '^  not checked  The pack.s skills are in .*/\.agents/skills, but none of the tools this script knows reads them here'
+check "a shared copy with no tool and no Claude Code: no known tool reads it, which is not checked" 0 $?
+check "and it is not a fault, since a tool this script does not know may read it" 0 "$code"
 
 # A Codex with nothing of the pack in it is not the one reader of the shared
 # copy while the pack is set up for Claude Code.
@@ -707,6 +711,234 @@ stop "\$(touch $P/substitution)"; check "the fallback id still asks when work la
 unset OPEN_STEPS_COOLDOWN
 [ -z "$(ls -A "$P")" ]; check "no command in any id ran" 0 $?
 rm -rf "$P"
+
+echo "CASE 20  the doctor reads the hooks deeper"
+# Issue 41. The doctor took a hook command as wired wherever it sat in the
+# file, took any session-start.sh as this pack's, judged the runnable mark only
+# for Claude Code, blamed Claude Code for a Gemini CLI set up without its
+# skills, faulted a shared copy that a tool it does not know may read, and
+# passed a copy with broken headers or without the folders the skills read.
+# Each scenario sits next to the correct install, which must still read sound.
+err="$(mktemp)"
+# A hand-made copy of the pack at $H/copy: the hook files with the marks the
+# pack ships, and one skill, so the hooks there read as this pack's.
+copy_pack() {
+  mkdir -p "$H/copy/hooks" "$H/copy/skills"
+  cp "$PACK"/hooks/*.sh "$H/copy/hooks/"
+  cp -R "$PACK/skills/os-done-or-not" "$H/copy/skills/"
+}
+gemini_events() { # $1 event for the start  $2 event for the stop  $3 the adapter path
+  mkdir -p "$H/.gemini"
+  printf '{"hooks":{"%s":[{"hooks":[{"type":"command","command":"bash %s gemini session-start"}]}],"%s":[{"hooks":[{"type":"command","command":"bash %s gemini stop"}]}]}}\n' \
+    "$1" "$3" "$2" "$3" > "$H/.gemini/settings.json"
+}
+cursor_events() { # $1 event for the start  $2 event for the stop  $3 what stands in front of "cursor"; pretty-printed
+  mkdir -p "$H/.cursor"
+  printf '{\n  "version": 1,\n  "hooks": {\n    "%s": [\n      { "command": "%s cursor session-start", "timeout": 10 }\n    ],\n    "%s": [\n      { "command": "%s cursor stop", "timeout": 10 }\n    ]\n  }\n}\n' \
+    "$1" "$3" "$2" "$3" > "$H/.cursor/hooks.json"
+}
+codex_cfg() { # $1 start command  $2 stop command, both as TOML strings with their quotes
+  mkdir -p "$H/.codex"
+  cat "$PACK/docs/routing-block.md" > "$H/.codex/AGENTS.md"
+  printf '[[hooks.session_start]]\n[[hooks.session_start.hooks]]\ntype = "command"\ncommand = %s\ntimeout_sec = 10\n\n[[hooks.stop]]\n[[hooks.stop.hooks]]\ntype = "command"\ncommand = %s\ntimeout_sec = 10\n' \
+    "$1" "$2" > "$H/.codex/config.toml"
+}
+
+# 1. The event each command sits under. A stop on SessionEnd never asks for a
+# report, and an AfterAgent used by some other hook must not excuse it.
+dhome; shared; wire_gemini
+printf '{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"bash %s gemini session-start"}]}],"SessionEnd":[{"hooks":[{"type":"command","command":"bash %s gemini stop"}]}],"AfterAgent":[{"hooks":[{"type":"command","command":"echo done"}]}]}}\n' \
+  "$PACK/hooks/adapter.sh" "$PACK/hooks/adapter.sh" > "$H/.gemini/settings.json"
+out="$(doctor)"; code=$?
+said '^  FAULT +.*/\.gemini/settings\.json puts adapter\.sh gemini stop under the SessionEnd event, not under AfterAgent\. A report is never asked for from there\.$'
+check "Gemini CLI: the stop under SessionEnd is a fault, with AfterAgent in use elsewhere" 0 $?
+check "and the exit code names the hooks" 3 "$code"
+said 'names both hook commands'
+check "and the hooks are not reported as wired" 1 $?
+gemini_events BeforeAgent AfterAgent "$PACK/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+said '^  FAULT +.*/\.gemini/settings\.json puts adapter\.sh gemini session-start under the BeforeAgent event, not under SessionStart\.'
+check "Gemini CLI: the start under another event is a fault" 0 $?
+check "and the exit code names the hooks" 3 "$code"
+# Pretty-printed, as docs/other-agents.md shows it, the right file reads sound.
+printf '{\n  "hooks": {\n    "SessionStart": [{ "hooks": [{ "type": "command", "name": "open-steps-session-start",\n      "command": "bash %s gemini session-start" }] }],\n    "AfterAgent": [{ "hooks": [{ "type": "command", "name": "open-steps-stop-report",\n      "command": "bash %s gemini stop" }] }]\n  }\n}\n' \
+  "$PACK/hooks/adapter.sh" "$PACK/hooks/adapter.sh" > "$H/.gemini/settings.json"
+out="$(doctor)"; code=$?
+sound "Gemini CLI with a pretty-printed settings file"
+said '^  ok +Each hook command in .*/\.gemini/settings\.json sits under the event it needs: adapter\.sh gemini session-start under SessionStart, adapter\.sh gemini stop under AfterAgent\.$'
+check "Gemini CLI: both events are read and right" 0 $?
+dhome; shared; cursor_events SessionStart Stop "$PACK/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+said '^  FAULT +.*/\.cursor/hooks\.json puts adapter\.sh cursor session-start under the SessionStart event, not under sessionStart\.'
+check "Cursor: a capitalised SessionStart is a fault" 0 $?
+said '^  FAULT +.*/\.cursor/hooks\.json puts adapter\.sh cursor stop under the Stop event, not under stop\.'
+check "Cursor: a capitalised Stop is a fault" 0 $?
+check "and the exit code names the hooks" 3 "$code"
+cursor_events sessionStart stop "$PACK/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+sound "Cursor with a pretty-printed hooks file"
+said '^  ok +Each hook command in .*/\.cursor/hooks\.json sits under the event it needs: adapter\.sh cursor session-start under sessionStart, adapter\.sh cursor stop under stop\.$'
+check "Cursor: both events are read and right" 0 $?
+
+# 2. Cursor runs adapter.sh directly, so the file needs the runnable mark, and
+# the adapter needs the two scripts and fingerprint.sh beside it.
+dhome; shared; copy_pack; chmod -x "$H/copy/hooks/adapter.sh"; wire_cursor "$H/copy/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+said "^  FAULT +Cursor runs adapter\.sh directly, but the file is not marked runnable, so it will not start: $H/copy/hooks/adapter\.sh$"
+check "Cursor: an adapter.sh run directly without the runnable mark is a fault" 0 $?
+check "and the exit code names the hooks" 3 "$code"
+chmod +x "$H/copy/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+sound "Cursor on a copy of the hooks that is marked runnable"
+said "^  ok +Cursor runs adapter\.sh directly, and the file is marked runnable: $H/copy/hooks/adapter\.sh$"
+check "Cursor: the mark was looked at, not assumed" 0 $?
+said "^  ok +The files adapter\.sh needs are beside it in $H/copy/hooks: session-start\.sh, stop-report\.sh and fingerprint\.sh\.$"
+check "Cursor: the files beside the adapter were looked at" 0 $?
+# A disk that marks every file runnable proves nothing, as in the Claude Code part.
+chmod -x "$H/copy/hooks/adapter.sh"; chmod +x "$H/copy/hooks/fingerprint.sh"
+out="$(doctor)"; code=$?
+said "^  not checked  Whether $H/copy/hooks/adapter\.sh can run was not checked\. This disk marks files runnable on its own\.$"
+check "Cursor: on a disk that marks everything runnable, the mark is not checked" 0 $?
+check "and that is not a fault" 0 "$code"
+# Run through a shell, Gemini CLI's documented form and Cursor's Windows form,
+# the mark does not matter.
+dhome; shared; copy_pack; chmod -x "$H/copy/hooks/adapter.sh"; wire_gemini; gemini_hooks "$H/copy/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+sound "Gemini CLI running an unmarked adapter.sh through bash"
+said "^  fact +.*/\.gemini/settings\.json runs adapter\.sh through a shell, so the file needs no runnable mark\. It has none: $H/copy/hooks/adapter\.sh$"
+check "Gemini CLI: the missing mark is a fact, since bash runs the file" 0 $?
+dhome; shared; copy_pack; chmod -x "$H/copy/hooks/adapter.sh"
+cursor_events sessionStart stop '\"C:/Program Files/Git/bin/bash.exe\" '"$H/copy/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+sound "Cursor on the Windows form, with the shell in front"
+said "^  fact +.*/\.cursor/hooks\.json runs adapter\.sh through a shell, so the file needs no runnable mark\. It has none: $H/copy/hooks/adapter\.sh$"
+check "Cursor: with the shell in front, the missing mark is a fact" 0 $?
+chmod +x "$H/copy/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+said 'needs no runnable mark'
+check "and with the mark in place nothing is said about it" 1 $?
+# An adapter.sh alone cannot run the hooks.
+dhome; shared; mkdir -p "$H/alone/hooks"; cp "$PACK/hooks/adapter.sh" "$PACK/hooks/fingerprint.sh" "$H/alone/hooks/"
+wire_cursor "$H/alone/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+said "^  FAULT +adapter\.sh runs session-start\.sh and stop-report\.sh from its own folder, and both read fingerprint\.sh there\. These are missing from $H/alone/hooks: session-start\.sh stop-report\.sh$"
+check "Cursor: an adapter.sh without the scripts beside it is a fault" 0 $?
+check "and the exit code names the hooks" 3 "$code"
+# Codex runs the two scripts directly, and both read fingerprint.sh beside them.
+dhome; shared; copy_pack; chmod -x "$H/copy/hooks/session-start.sh"
+codex_cfg "\"$H/copy/hooks/session-start.sh\"" "\"$H/copy/hooks/stop-report.sh\""
+out="$(doctor)"; code=$?
+said "^  FAULT +Codex runs session-start\.sh directly at the start of a session, but the file is not marked runnable, so it will not start: $H/copy/hooks/session-start\.sh$"
+check "Codex: a script run directly without the runnable mark is a fault" 0 $?
+check "and the exit code names the hooks" 3 "$code"
+chmod +x "$H/copy/hooks/session-start.sh"
+out="$(doctor)"; code=$?
+sound "Codex on a hand-made copy of the pack"
+said "^  ok +Codex runs stop-report\.sh directly at the end of a session, and the file is marked runnable: $H/copy/hooks/stop-report\.sh$"
+check "Codex: the mark was looked at, not assumed" 0 $?
+said "^  ok +The file both hooks read, fingerprint\.sh, is beside them in $H/copy/hooks\.$"
+check "Codex: fingerprint.sh beside the scripts was looked at" 0 $?
+# The installed copy with fingerprint.sh gone, run by Codex too.
+dhome; shared; C="$H/inst"; mkdir -p "$C"; cp -R "$PACK/." "$C" && rm -rf "$C/.git" "$C/hooks/fingerprint.sh"
+wire_claude
+printf '{"version":2,"plugins":{"open-steps@open-steps":[{"scope":"user","installPath":"%s","version":"0.0.0"}]}}\n' \
+  "$C" > "$H/.claude/plugins/installed_plugins.json"
+codex_cfg "\"$C/hooks/session-start.sh\"" "\"$C/hooks/stop-report.sh\""
+out="$(doctor)"; code=$?
+said "^  FAULT +The file Codex runs at the start of a session reads fingerprint\.sh from its own folder, and that file is missing: $C/hooks/fingerprint\.sh$"
+check "Codex: a script without fingerprint.sh beside it is a fault" 0 $?
+check "and the exit code names the hooks" 3 "$code"
+
+# 3. A file called session-start.sh from some other pack. Matched by name, it
+# made Codex an install of this pack, with three faults for a Claude Code user
+# who never set Codex up.
+dhome; wire_claude; mkdir -p "$H/.codex" "$H/elsewhere/hooks"
+printf '#!/bin/sh\nexit 0\n' > "$H/elsewhere/hooks/session-start.sh"; chmod +x "$H/elsewhere/hooks/session-start.sh"
+printf '[[hooks.session_start]]\n[[hooks.session_start.hooks]]\ntype = "command"\ncommand = "%s/elsewhere/hooks/session-start.sh"\n' "$H" > "$H/.codex/config.toml"
+out="$(doctor)"; code=$?
+sound "Claude Code next to a Codex running another pack's session-start.sh"
+said "^  fact +The Codex settings run a file called session-start\.sh at the start of a session that is not this pack's: $H/elsewhere/hooks/session-start\.sh\."
+check "the file of the same name is reported as someone else's" 0 $?
+said '^  fact +Nothing from this pack is set up for Codex\.'
+check "and Codex is not taken as set up for the pack" 0 $?
+# With the routing block in place Codex is set up, and that file is still not
+# this pack's hook, so the pack's own is missing.
+cat "$PACK/docs/routing-block.md" > "$H/.codex/AGENTS.md"; shared
+out="$(doctor)"; code=$?
+said "^  FAULT +The Codex settings file sets up a hook for the start of a session, but it runs none of this pack's files there\.$"
+check "Codex set up with another pack's hook in place of its own: the gap is a fault" 0 $?
+said '^  FAULT +The Codex settings file sets up no hook for the end of a session\.$'
+check "and the missing stop hook is still one" 0 $?
+check "and the exit code names the hooks" 3 "$code"
+
+# 4. Commands that are not a bare path.
+dhome; shared
+codex_cfg "'bash $PACK/hooks/session-start.sh'" "\"$PACK/hooks/stop-report.sh\""
+printf '\n[[hooks.stop.hooks]]\ntype = "command"\ncommand = "notify-send done"\n' >> "$H/.codex/config.toml"
+out="$(doctor)"; code=$?
+sound "Codex with a single-quoted bash command and another hook beside the pack's"
+said '^  ok +The file Codex runs at the start of a session is there\.$'
+check "Codex: a single-quoted TOML string run through bash names the file" 0 $?
+said '^  fact +The Codex settings also run notify-send done at the end of a session\. That is not a file of this pack, and it was not judged\.$'
+check "Codex: a command that is not a path is someone else's hook, a fact" 0 $?
+codex_cfg "\"~/open-steps/hooks/session-start.sh\"" "\"$PACK/hooks/stop-report.sh\""
+out="$(doctor)"; code=$?
+said '^  not checked  The Codex settings give a path that is not a full path for the start of a session, so whether that file is there was not checked: ~/open-steps/hooks/session-start\.sh$'
+check "Codex: a path through ~ is not checked" 0 $?
+check "and it is not a fault" 0 "$code"
+
+# 5. The tool that is set up takes the blame.
+dhome; wire_gemini; echo '{}' > "$H/.claude.json"
+out="$(doctor)"; code=$?
+said "^  FAULT +Gemini CLI is set up for this pack, but none of its skills are in the shared skills folder, $H/\.agents/skills, or in $H/\.gemini/skills, so Gemini CLI has none of them\.$"
+check "Gemini CLI wired with no skills anywhere: the fault names Gemini CLI" 0 $?
+said '^  FAULT +No installed copy of the pack was found\. Claude Code cannot see it\.'
+check "and Claude Code is not blamed" 1 $?
+said '^  fact +Claude Code is here, and nothing of the pack is set up for it'
+check "Claude Code with nothing of the pack reads as a fact" 0 $?
+check "and the exit code names the skills" 1 "$code"
+shared
+out="$(doctor)"; code=$?
+sound "Gemini CLI wired, once the skills are copied"
+dhome; wire_cursor "$PACK/hooks/adapter.sh"; echo '{}' > "$H/.claude.json"
+out="$(doctor)"; code=$?
+said "^  FAULT +Cursor is set up for this pack, but none of its skills are in the shared skills folder, $H/\.agents/skills, or in $H/\.cursor/skills, so Cursor has none of them\.$"
+check "Cursor wired with no skills anywhere: the fault names Cursor" 0 $?
+check "and the exit code names the skills" 1 "$code"
+own .cursor
+out="$(doctor)"; code=$?
+sound "Cursor wired, once the skills are copied into its own folder"
+
+# 6. A shared copy that no tool this script knows reads: another tool may be
+# using it, so it is not checked, and the copy itself still is.
+dhome; shared
+out="$(doctor)"; code=$?
+sound "a shared copy with no tool this script knows"
+said "^  not checked  The pack's skills are in $H/\.agents/skills, but none of the tools this script knows reads them here: there is no $H/\.codex, $H/\.cursor or $H/\.gemini folder, and no sign of Claude Code\. Another tool that reads that folder may be using the copy\.$"
+check "the copy no known tool reads is not checked, not faulted" 0 $?
+said '^  ok +All [0-9]+ skills are copied into the shared skills folder'
+check "and the copy itself is still checked" 0 $?
+
+# 7. A copy with a broken header, or without the folders the skills read.
+dhome; shared; wire_gemini
+printf 'no header\n' > "$H/.agents/skills/os-done-or-not/SKILL.md"
+printf -- '---\nname: some-other-name\n---\n' > "$H/.agents/skills/os-say-simple/SKILL.md"
+out="$(doctor)"; code=$?
+said '^  FAULT +These skill files in the shared skills folder have a broken header, so the agent skips them: os-done-or-not os-say-simple$'
+check "a copy with broken headers is a fault" 0 $?
+check "and the exit code names the skills" 1 "$code"
+dhome; shared; wire_gemini
+rm -rf "$H/.agents/skills/os-done-or-not/references" "$H/.agents/skills/os-what-could-go-wrong/scripts"
+out="$(doctor)"; code=$?
+said '^  FAULT +These skills in the shared skills folder were copied without the folders they need: os-done-or-not os-what-could-go-wrong$'
+check "a copy of the SKILL.md files without their folders is a fault" 0 $?
+check "and the exit code names the skills" 1 "$code"
+dhome; shared; wire_gemini
+out="$(doctor)"; code=$?
+sound "a whole copy in the shared folder"
+said '^  ok +All [0-9]+ skills are copied into the shared skills folder, with sound headers and the folders they need\.$'
+check "and the ok line says what was looked at" 0 $?
+rm -f "$err"
 
 echo
 echo "passed $pass, failed $fail"

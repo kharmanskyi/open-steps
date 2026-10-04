@@ -17,13 +17,19 @@
 #   skills folders  ~/.agents/skills, shared by Codex, Cursor and Gemini CLI,
 #                and each tool's own: ~/.codex/skills, ~/.cursor/skills and
 #                ~/.gemini/skills. All four are read, and a copy in any of them
-#                is checked. Part of the pack is a fault. Shortcuts are a fault
-#                in a folder Codex reads (the shared one, ~/.codex/skills) while
-#                Codex is judged; otherwise they are a fact, and what the tool
-#                does with them is "not checked".
+#                is checked: every skill, each with a sound header, and with
+#                the references and scripts folders its source has. Part of
+#                the pack is a fault. Shortcuts are a fault in a folder Codex
+#                reads (the shared one, ~/.codex/skills) while Codex is judged;
+#                otherwise they are a fact, and what the tool does with them is
+#                "not checked".
 #   found for another tool  a copy in a tool's own folder, a copy in the
-#                shared folder while ~/.codex, ~/.cursor or ~/.gemini exists, or
-#                a Codex AGENTS.md or config.toml that mentions the pack.
+#                shared folder while ~/.codex, ~/.cursor or ~/.gemini exists, a
+#                Codex AGENTS.md that mentions the pack or a config.toml that
+#                runs one of its hooks, or a Gemini CLI or Cursor whose routing
+#                block or hooks file names it. A tool set up that way with no
+#                copy of the skills in the shared folder or its own is a fault,
+#                blamed on that tool.
 #   Claude Code  a sign of it is the claude command on the PATH,
 #                ~/.claude.json, or a plugins folder, settings file or
 #                CLAUDE.md in ~/.claude. A bare ~/.claude does not count: the
@@ -37,21 +43,34 @@
 #                with no registry entry, the plugin cache is searched, never
 #                the marketplace folders.
 #   found for no tool  not found for another tool and no sign of Claude Code:
-#                a fault, also when a shared copy sits where no tool reads it.
-#   Codex        judged in full when ~/.codex exists and its AGENTS.md or
-#                config.toml mentions the pack, or ~/.codex/skills holds a
-#                copy, or the shared folder holds one while there is no
-#                ~/.gemini or ~/.cursor and nothing of the pack in Claude
-#                Code's files, which leaves Codex as the one tool the copy can
-#                be for. In full means a copy of the skills, the routing block
-#                in AGENTS.md, and hooks in config.toml whose paths are files.
-#                With a shared copy that could be for another tool, and no
-#                Codex file that mentions the pack, that is a fact.
+#                a fault when nothing of the pack is on the machine. A copy in
+#                the shared folder with none of those tools here is "not
+#                checked": a tool this script does not know may read it.
+#   Codex        judged in full when ~/.codex exists and its AGENTS.md
+#                mentions the pack or its config.toml runs one of the pack's
+#                hooks, or ~/.codex/skills holds a copy, or the shared folder
+#                holds one while there is no ~/.gemini or ~/.cursor and nothing
+#                of the pack in Claude Code's files, which leaves Codex as the
+#                one tool the copy can be for. In full means a copy of the
+#                skills, the routing block in AGENTS.md, and hooks in
+#                config.toml whose paths are files marked runnable, with
+#                fingerprint.sh beside them. A hook is the pack's when its path
+#                is under the installed copy or the clone, or its folder holds
+#                fingerprint.sh and sits next to a skills folder of the pack. A
+#                file of the same name from somewhere else is a fact, never a
+#                fault, and so is a command that is not a path. A path through
+#                ~ is "not checked". With a shared copy that could be for
+#                another tool, and no Codex file that mentions the pack, that
+#                is a fact.
 #   Gemini CLI, Cursor  their routing block and the hook commands they name
-#                are reported as facts. The path in front of adapter.sh is
-#                judged: the example path from docs/other-agents.md, or a path
-#                with no file, is a fault; a path that is not a full path is
-#                "not checked".
+#                are reported as facts. Four things are judged. The path in
+#                front of adapter.sh: the example path from
+#                docs/other-agents.md, or a path with no file, is a fault; a
+#                path that is not a full path is "not checked". The event each
+#                command sits under: SessionStart and AfterAgent on Gemini CLI,
+#                sessionStart and stop on Cursor. The files adapter.sh needs
+#                beside it. And the runnable mark, when a command runs
+#                adapter.sh directly rather than through a shell.
 #
 # Exit codes. Zero means no fault was found.
 #   1  the skills
@@ -186,6 +205,92 @@ has_copy() { # $1 skills folder -> true when at least one skill of the pack is i
   return 1
 }
 
+header_sound() { # $1 a SKILL.md  $2 the skill's name -> true when the header is one the agent reads
+  head -1 "$1" | grep -q '^---$' \
+    && sed -n '2,/^---$/p' "$1" | grep -Eq "^name:[[:space:]]*${2}[[:space:]]*$"
+}
+
+path_state() { # $1 path -> example, here, gone or partial
+  case "$1" in
+    */path/to/*) printf 'example' ;;
+    /*|[A-Za-z]:/*) if [ -f "$1" ]; then printf 'here'; else printf 'gone'; fi ;;
+    *) printf 'partial' ;;
+  esac
+}
+
+# A hook of this pack sits in the hooks folder of a copy of it: the installed
+# copy, the clone, or a folder that holds fingerprint.sh with a skills folder
+# of the pack beside it. A file of the same name from somewhere else is not
+# this pack's hook, and taking it for one would judge a Codex nobody set up.
+pack_hook() { # $1 path -> true when the file is this pack's hook
+  local dir real
+  dir="$(dirname "$1")"
+  # The physical path, the way the installed copy and the clone are read: a
+  # folder reached through a shortcut must compare equal to itself.
+  real="$(cd "$dir" 2>/dev/null && pwd -P)" || real="$dir"
+  case "$real/" in "$PACK"/*) return 0 ;; esac
+  if [ -n "$INSTALL" ]; then
+    case "$real/" in "$INSTALL"/*) return 0 ;; esac
+  fi
+  [ -e "$dir/fingerprint.sh" ] && has_copy "$dir/../skills"
+}
+
+# Codex sets its hooks in TOML. Each command string, in double or single
+# quotes, under a session_start or stop table.
+codex_commands() { # $1 config file -> one "event<tab>command" per line
+  awk -v q="'" '
+    /^\[\[hooks\.session_start/ { ev = "the start of a session"; next }
+    /^\[\[hooks\.stop/          { ev = "the end of a session"; next }
+    /^\[/                       { ev = ""; next }
+    ev != "" && /^[[:space:]]*command[[:space:]]*=/ {
+      if (match($0, /"[^"]*"/) || match($0, q "[^" q "]*" q)) {
+        print ev "\t" substr($0, RSTART + 1, RLENGTH - 2)
+      }
+    }
+  ' "$1"
+}
+
+# What a Codex hook command is. The first word is the file, or a shell with
+# the file as its second word. Anything else is another hook, not a path.
+codex_kind() { # $1 command -> "kind<tab>file<tab>direct", the kind one of ours, example, partial, foreign, gone or other
+  local first second file direct=1
+  read -r first second _ <<<"$1"
+  case "$first" in
+    bash|sh|*/bash|*/sh) file="$second"; direct=0 ;;
+    */*) file="$first" ;;
+    *) file="" ;;
+  esac
+  if [ -z "$file" ]; then
+    printf 'other\t%s\t%s' "$1" "$direct"
+    return
+  fi
+  case "$(path_state "$file")" in
+    example) printf 'example\t%s\t%s' "$file" "$direct"; return ;;
+    partial) printf 'partial\t%s\t%s' "$file" "$direct"; return ;;
+  esac
+  if pack_hook "$file"; then
+    printf 'ours\t%s\t%s' "$file" "$direct"
+    return
+  fi
+  case "$(basename "$file")" in
+    session-start.sh|stop-report.sh)
+      if [ -e "$file" ]; then
+        printf 'foreign\t%s\t%s' "$file" "$direct"
+      else
+        printf 'gone\t%s\t%s' "$file" "$direct"
+      fi ;;
+    *) printf 'other\t%s\t%s' "$1" "$direct" ;;
+  esac
+}
+
+codex_kinds() { # $1 config file -> one "kind<tab>file<tab>direct<tab>event" per line
+  local ev cmd
+  while IFS="$(printf '\t')" read -r ev cmd; do
+    [ -n "${cmd:-}" ] || continue
+    printf '%s\t%s\n' "$(codex_kind "$cmd")" "$ev"
+  done < <(codex_commands "$1")
+}
+
 # Codex, Cursor and Gemini CLI read one shared skills folder, and each reads a
 # folder of its own too. A copy in a tool's own folder is that tool's. A copy
 # in the shared one does not say which of the three it was meant for.
@@ -204,25 +309,9 @@ has_copy "$cur/skills" && cur_own=1
 gem_own=0
 has_copy "$gem/skills" && gem_own=1
 
-# Codex is judged only where it is, and only once the pack is set up for it. A
-# ~/.codex left behind by something else is not an install of this pack, and
-# faulting on it would cry wolf. Half of the pack is a fault, because that
-# silent gap is what this script hunts.
-here=0
-if [ -d "$codex" ]; then
-  mentions_pack "$agents" && here=1
-  [ "$here" -eq 0 ] && [ -r "$cfg" ] \
-    && grep -Eq 'session-start\.sh|stop-report\.sh' "$cfg" && here=1
-fi
-# A copy in the shared folder counts as found for another tool only while a
-# tool that reads that folder is here. With none of them, it is a copy nobody
-# reads, and it must not excuse a Claude Code that is missing the plugin.
-shared_read=0
-if [ "$shared" -eq 1 ] && { [ -d "$codex" ] || [ -d "$cur" ] || [ -d "$gem" ]; }; then
-  shared_read=1
-fi
-elsewhere=0
-[ $((shared_read + codex_own + cur_own + gem_own + here)) -gt 0 ] && elsewhere=1
+# Whether the pack is set up for Codex, Gemini CLI or Cursor is read below,
+# once the installed copy is known: a Codex hook counts only when its path is
+# this pack's, and that test needs the installed copy.
 
 # A sign of Claude Code is its command, ~/.claude.json, or the files this
 # script reads for it below. A bare ~/.claude is not enough: the hooks write
@@ -274,6 +363,42 @@ else
     break
   done < <(install_candidates)
 fi
+
+# Codex is judged only where it is, and only once the pack is set up for it. A
+# ~/.codex left behind by something else is not an install of this pack, and
+# faulting on it would cry wolf. Half of the pack is a fault, because that
+# silent gap is what this script hunts. The settings file counts once a hook
+# it runs is this pack's, by its path and not by its name: a session-start.sh
+# from some other pack does not make Codex an install of this one.
+here=0
+codex_hooks=""
+if [ -d "$codex" ]; then
+  mentions_pack "$agents" && here=1
+  if [ -r "$cfg" ]; then
+    codex_hooks="$(codex_kinds "$cfg")"
+    printf '%s\n' "$codex_hooks" | grep -Eq "^(ours|example)"$'\t' && here=1
+  fi
+fi
+# Gemini CLI and Cursor are set up for the pack when their routing block or
+# their hooks file names it. Set up that way with no copy of the skills, the
+# tool itself is the one to blame, and a Claude Code beside it with nothing of
+# the pack is a fact.
+gem_wired=0
+if [ -d "$gem" ]; then
+  mentions_pack "$gem/GEMINI.md" && gem_wired=1
+  [ -r "$gem/settings.json" ] && grep -Eq 'adapter\.sh[^[:alnum:]]+gemini' "$gem/settings.json" && gem_wired=1
+fi
+cur_wired=0
+[ -r "$cur/hooks.json" ] && grep -Eq 'adapter\.sh[^[:alnum:]]+cursor' "$cur/hooks.json" && cur_wired=1
+# A copy in the shared folder counts as found for another tool only while a
+# tool that reads that folder is here. With none of them, it is a copy nobody
+# reads, and it must not excuse a Claude Code that is missing the plugin.
+shared_read=0
+if [ "$shared" -eq 1 ] && { [ -d "$codex" ] || [ -d "$cur" ] || [ -d "$gem" ]; }; then
+  shared_read=1
+fi
+elsewhere=0
+[ $((shared_read + codex_own + cur_own + gem_own + here + gem_wired + cur_wired)) -gt 0 ] && elsewhere=1
 
 # Something of the pack in Claude Code's own files: an installed copy, a
 # registry entry even when its folder is gone, an entry for the plugin in the
@@ -366,8 +491,7 @@ else
       missing="$missing $name"
     elif [ ! -r "$f" ]; then
       unreadable="$unreadable $name"
-    elif head -1 "$f" | grep -q '^---$' \
-      && sed -n '2,/^---$/p' "$f" | grep -Eq "^name:[[:space:]]*${name}[[:space:]]*$"; then
+    elif header_sound "$f" "$name"; then
       good=$((good + 1))
     else
       # A broken header makes a skill fail without a word. The folder is still
@@ -526,17 +650,57 @@ else
 fi
 
 # --- Codex ----------------------------------------------------------------
-codex_commands() { # $1 config file -> one "event<tab>path" per line
-  awk '
-    /^\[\[hooks\.session_start/ { ev = "the start of a session"; next }
-    /^\[\[hooks\.stop/          { ev = "the end of a session"; next }
-    /^\[/                       { ev = ""; next }
-    ev != "" && /^[[:space:]]*command[[:space:]]*=/ {
-      if (match($0, /"[^"]*"/)) {
-        print ev "\t" substr($0, RSTART + 1, RLENGTH - 2)
-      }
-    }
-  ' "$1"
+# The pack ships hooks/fingerprint.sh and hooks/hooks.json without the
+# runnable mark on purpose, so either one is a free test of the disk a copy
+# sits on. Marked runnable there, that disk hands out the mark by itself, as a
+# checkout with core.filemode set to false does, and the mark proves nothing
+# about the files that need it.
+mark_means() { # $1 hooks folder -> yes, no when the disk marks every file, or none when no file there can tell
+  local probe seen=0
+  for probe in "$1/fingerprint.sh" "$1/hooks.json"; do
+    [ -r "$probe" ] || continue
+    seen=1
+    [ -x "$probe" ] || { printf 'yes'; return 0; }
+  done
+  if [ "$seen" -eq 1 ]; then printf 'no'; else printf 'none'; fi
+}
+
+runs_direct() { # $1 file a tool runs directly  $2 the tool's name  $3 when it runs, or nothing
+  local when="" name
+  [ -n "$3" ] && when=" at $3"
+  name="$(basename "$1")"
+  case "$(mark_means "$(dirname "$1")")" in
+    yes)
+      if [ -x "$1" ]; then
+        ok "$2 runs $name directly$when, and the file is marked runnable: $1"
+      else
+        fault "$2 runs $name directly$when, but the file is not marked runnable, so it will not start: $1" 3
+      fi ;;
+    no)  unknown "Whether $1 can run was not checked. This disk marks files runnable on its own." ;;
+    *)   unknown "Whether $1 can run was not checked. No file beside it says whether this disk marks files runnable on its own." ;;
+  esac
+}
+
+# A hook in the Codex settings that is not this pack's still gets its line:
+# a file of the same name from some other pack, a command that is not a path,
+# and a path this script cannot follow are facts about the settings file,
+# whoever the install is for.
+codex_hook_aside() { # $1 kind  $2 file, or the command  $3 when it runs
+  case "$1" in
+    other)   fact "The Codex settings also run $2 at $3. That is not a file of this pack, and it was not judged." ;;
+    foreign) fact "The Codex settings run a file called $(basename "$2") at $3 that is not this pack's: $2. A hook of this pack sits in the hooks folder of a copy that also holds the skills." ;;
+    gone)    unknown "Whether the file the Codex settings run at $3 was this pack's was not checked. It is not there: $2" ;;
+    partial) unknown "The Codex settings give a path that is not a full path for $3, so whether that file is there was not checked: $2" ;;
+  esac
+}
+
+codex_other_hooks() {
+  local kind file direct ev
+  [ -n "$codex_hooks" ] || return 0
+  while IFS="$(printf '\t')" read -r kind file direct ev; do
+    [ -n "$kind" ] || continue
+    codex_hook_aside "$kind" "$file" "$ev"
+  done <<<"$codex_hooks"
 }
 
 and_list() { # names -> "a", "a and b", "a, b and c"
@@ -555,7 +719,7 @@ and_list() { # names -> "a", "a and b", "a, b and c"
 }
 
 skill_copy() { # $1 folder  $2 what to call it  $3 1 when Codex reads it  $4 the other tools that read it
-  local dir="$1" label="$2" codex_reads="$3" others="$4" name missing="" linked="" n=0
+  local dir="$1" label="$2" codex_reads="$3" others="$4" name missing="" linked="" broken="" bare="" n=0 sub
   for name in "${expected[@]}"; do
     if [ ! -r "$dir/$name/SKILL.md" ]; then
       missing="$missing $name"
@@ -569,8 +733,21 @@ skill_copy() { # $1 folder  $2 what to call it  $3 1 when Codex reads it  $4 the
     else
       n=$((n + 1))
     fi
+    # A broken header makes a skill fail without a word, as in the Claude Code
+    # part above. The folder is still there, so counting folders passes on it.
+    header_sound "$dir/$name/SKILL.md" "$name" || broken="$broken $name"
+    # Some skills read a file from a references or scripts folder of their own
+    # while they run. A copy of the SKILL.md files alone leaves them nothing
+    # to read.
+    for sub in references scripts; do
+      if [ -d "$PACK/skills/$name/$sub" ] && [ ! -d "$dir/$name/$sub" ]; then
+        case " $bare " in *" $name "*) ;; *) bare="$bare $name" ;; esac
+      fi
+    done
   done
   [ -n "$missing" ] && fault "Part of the pack is in $label, but these skills are not:$missing" 1
+  [ -n "$broken" ] && fault "These skill files in $label have a broken header, so the agent skips them:$broken" 1
+  [ -n "$bare" ] && fault "These skills in $label were copied without the folders they need:$bare" 1
   # Blamed on Codex only while Codex is judged. A ~/.codex with nothing of the
   # pack in it, next to another tool that reads the folder, is not the reader
   # the copy was made for.
@@ -586,11 +763,11 @@ skill_copy() { # $1 folder  $2 what to call it  $3 1 when Codex reads it  $4 the
     fi
     unknown "What $others do with a shortcut was not checked."
   fi
-  if [ -z "$missing" ] && [ -z "$linked" ]; then
+  if [ -z "$missing" ] && [ -z "$linked" ] && [ -z "$broken" ] && [ -z "$bare" ]; then
     if [ "$dir" = "$sdir" ]; then
-      ok "All $n skills are copied into the shared skills folder."
+      ok "All $n skills are copied into the shared skills folder, with sound headers and the folders they need."
     else
-      ok "The pack's $n skills are copied into $label."
+      ok "The pack's $n skills are copied into $label, with sound headers and the folders they need."
     fi
   fi
 }
@@ -606,9 +783,12 @@ if [ "${#expected[@]}" -eq 0 ]; then
   unknown "This script could not read the pack's own list of skills, so these folders were not checked."
 elif [ "$CC" -eq 0 ] && [ "$elsewhere" -eq 0 ]; then
   # With no sign of Claude Code either, nothing below would judge anything,
-  # and a machine without the pack would read as sound.
+  # and a machine without the pack would read as sound. A shared copy is a
+  # different case: a tool this script does not know may read that folder, so
+  # the copy is checked, and who reads it is not.
   if [ "$shared" -eq 1 ]; then
-    fault "The pack was found for no tool: its skills are in $sdir, but there is no $codex, $cur or $gem folder, so no tool this script knows reads them, and there is no sign of Claude Code." 1
+    unknown "The pack's skills are in $sdir, but none of the tools this script knows reads them here: there is no $codex, $cur or $gem folder, and no sign of Claude Code. Another tool that reads that folder may be using the copy."
+    skill_copy "$sdir" "the shared skills folder" 1 "Cursor and Gemini CLI"
   else
     fault "No copy of the pack was found for any tool. None of its skills are in $sdir, $codex/skills, $cur/skills or $gem/skills, and there is no sign of Claude Code." 1
   fi
@@ -646,8 +826,10 @@ elif [ "$codex_judged" -eq 0 ] && [ "$shared" -eq 1 ]; then
   else
     fact "The copy in the shared skills folder may be for Codex, but the pack is set up for Claude Code, so the copy is not taken for a Codex install. Neither $agents nor $cfg mentions the pack, so Codex has no routing block or hooks from it; docs/other-agents.md shows both."
   fi
+  codex_other_hooks
 elif [ "$codex_judged" -eq 0 ]; then
   fact "Nothing from this pack is set up for Codex. There is nothing to check."
+  codex_other_hooks
 else
   if [ "$codex_judged" -eq 2 ]; then
     fact "There is no $gem or $cur folder, so of the three tools that read the shared skills folder, Codex is the one here. The copy there is taken for a Codex install, and Codex is checked in full."
@@ -663,37 +845,67 @@ else
   elif [ ! -r "$cfg" ]; then
     unknown "The Codex settings file cannot be read."
   else
+    # Each event needs a table in the file and, in it, a hook that runs one of
+    # this pack's files. A table with only other hooks in it is the same gap
+    # as no table. A path this script cannot follow is neither a hook of the
+    # pack nor a gap, so it holds the judgement back.
+    has_start=0; grep -Eq '^\[\[hooks\.session_start' "$cfg" && has_start=1
+    has_stop=0;  grep -Eq '^\[\[hooks\.stop' "$cfg" && has_stop=1
+    ours_start=0; ours_stop=0; open_start=0; open_stop=0
+    while IFS="$(printf '\t')" read -r kind file direct ev; do
+      [ -n "$kind" ] || continue
+      case "$kind" in
+        ours|example|gone)
+          if [ "$ev" = "the start of a session" ]; then ours_start=1; else ours_stop=1; fi ;;
+        partial)
+          if [ "$ev" = "the start of a session" ]; then open_start=1; else open_stop=1; fi ;;
+      esac
+    done <<<"$codex_hooks"
     cmiss=""
-    grep -Eq '^\[\[hooks\.session_start' "$cfg" || cmiss="the start of a session"
-    if ! grep -Eq '^\[\[hooks\.stop' "$cfg"; then
-      cmiss="${cmiss:+$cmiss and }the end of a session"
-    fi
-    if [ -n "$cmiss" ]; then
-      fault "The Codex settings file sets up no hook for $cmiss." 3
-    else
+    [ "$has_start" -eq 1 ] || cmiss="the start of a session"
+    [ "$has_stop" -eq 1 ] || cmiss="${cmiss:+$cmiss and }the end of a session"
+    none=""
+    [ "$has_start" -eq 1 ] && [ "$ours_start" -eq 0 ] && [ "$open_start" -eq 0 ] && none="the start of a session"
+    [ "$has_stop" -eq 1 ] && [ "$ours_stop" -eq 0 ] && [ "$open_stop" -eq 0 ] && none="${none:+$none and }the end of a session"
+    [ -n "$cmiss" ] && fault "The Codex settings file sets up no hook for $cmiss." 3
+    [ -n "$none" ] && fault "The Codex settings file sets up a hook for $none, but it runs none of this pack's files there." 3
+    if [ -z "$cmiss" ] && [ -z "$none" ]; then
       ok "The Codex settings file sets up a hook at the start and at the end of a session."
     fi
     # The block in the documentation ships an example path. Pasted unchanged it
     # reads as correct and points at nothing, so every path gets looked up.
-    seen=0
-    while IFS="$(printf '\t')" read -r ev cmd; do
-      [ -n "${cmd:-}" ] || continue
-      seen=1
-      case "$cmd" in
-        */absolute/path/to/*)
-          fault "The Codex settings still hold the example path for $ev. Put your own path there." 3
-          continue
-          ;;
+    # Codex runs each file directly, so the file needs the runnable mark, and
+    # both files read fingerprint.sh from their own folder.
+    fpdirs=""
+    while IFS="$(printf '\t')" read -r kind file direct ev; do
+      [ -n "$kind" ] || continue
+      case "$kind" in
+        example)
+          fault "The Codex settings still hold the example path for $ev. Put your own path there." 3 ;;
+        gone)
+          fault "Codex runs a file that is not there at $ev: $file" 3 ;;
+        ours)
+          if [ ! -f "$file" ]; then
+            fault "Codex runs a file that is not there at $ev: $file" 3
+            continue
+          fi
+          ok "The file Codex runs at $ev is there."
+          if [ "$direct" -eq 1 ]; then
+            runs_direct "$file" "Codex" "$ev"
+          elif [ ! -x "$file" ]; then
+            fact "The Codex settings run $(basename "$file") through a shell, so the file needs no runnable mark. It has none: $file"
+          fi
+          d="$(dirname "$file")"
+          case " $fpdirs " in *" $d "*) continue ;; esac
+          fpdirs="$fpdirs $d"
+          if [ -e "$d/fingerprint.sh" ]; then
+            ok "The file both hooks read, fingerprint.sh, is beside them in $d."
+          else
+            fault "The file Codex runs at $ev reads fingerprint.sh from its own folder, and that file is missing: $d/fingerprint.sh" 3
+          fi ;;
+        *) codex_hook_aside "$kind" "$file" "$ev" ;;
       esac
-      if [ -f "$cmd" ]; then
-        ok "The file Codex runs at $ev is there."
-      else
-        fault "Codex runs a file that is not there at $ev: $cmd" 3
-      fi
-    done < <(codex_commands "$cfg")
-    if [ "$seen" -eq 0 ] && [ -z "$cmiss" ]; then
-      fault "The Codex settings name no file to run, so nothing happens." 3
-    fi
+    done <<<"$codex_hooks"
   fi
 
   unknown "Whether you trusted the Codex hooks was not checked. An untrusted hook still runs, but it can no longer stop the session to ask for a report. The sign is that reports never appear."
@@ -776,24 +988,75 @@ fi
 # Their routing block and the hook commands they name are reported, not judged.
 # Both run the hooks through hooks/adapter.sh, wired by hand as
 # docs/other-agents.md shows, and this says nothing about whether the tool runs
-# them. The path in front of adapter.sh is judged, the way the Codex paths are:
-# the documentation ships an example path, and pasted unchanged it reads as
-# wired and points at nothing.
-adapter_path() { # $1 hooks file  $2 tool as the adapter names it  $3 hook -> the path, or nothing
-  local p
-  p="$(grep -oE "[^\"' ]*adapter\.sh[^[:alnum:]]+${2}[^[:alnum:]]+${3}" "$1" 2>/dev/null | head -1)"
-  [ -n "$p" ] || return 1
-  # Windows records backslashes, doubled inside JSON.
-  # shellcheck disable=SC1003  # tr wants the backslash doubled, not quoted
-  printf '%s\n' "${p%%adapter.sh*}adapter.sh" | tr '\\' '/' | sed -E 's|/{2,}|/|g'
+# them. Four things about each command are judged. The path in front of
+# adapter.sh, the way the Codex paths are: the documentation ships an example
+# path, and pasted unchanged it reads as wired and points at nothing. The event
+# the command sits under: on Gemini CLI a stop under SessionEnd runs and never
+# asks, and Cursor's event names are case-sensitive. The files adapter.sh runs
+# and reads from its own folder. And the runnable mark, when the command runs
+# adapter.sh directly instead of through a shell.
+
+# One pass over the file, flattened to a line, reading each JSON string in
+# turn. A string followed by a colon is a key; an opening bracket pushes the
+# last key seen, a closing one pops it. The string that holds the adapter
+# command is reported with the nearest key above it that is not "hooks", which
+# is the event. Pretty-printed or on one line reads the same.
+adapter_entry() { # $1 hooks file  $2 tool as the adapter names it  $3 hook -> "event<tab>command", "-" for no event, or nothing
+  tr -d '\n\r' < "$1" | awk -v tool="$2" -v hook="$3" '
+    BEGIN { re = "adapter\\.sh[^A-Za-z0-9]+" tool "[^A-Za-z0-9]+" hook }
+    {
+      n = length($0); i = 1; depth = 0; key = ""
+      while (i <= n) {
+        c = substr($0, i, 1)
+        if (c == "\"") {
+          lit = ""; j = i + 1
+          while (j <= n) {
+            d = substr($0, j, 1)
+            if (d == "\\") { lit = lit substr($0, j + 1, 1); j += 2; continue }
+            if (d == "\"") break
+            lit = lit d; j++
+          }
+          k = j + 1
+          while (k <= n && substr($0, k, 1) ~ /[ \t]/) k++
+          if (substr($0, k, 1) == ":") {
+            key = lit
+          } else {
+            if (lit ~ re) {
+              ev = "-"
+              for (l = depth; l >= 1; l--) {
+                if (stack[l] != "" && stack[l] != "hooks") { ev = stack[l]; break }
+              }
+              print ev "\t" lit
+              exit
+            }
+            key = ""
+          }
+          i = j + 1
+          continue
+        }
+        if (c == "[" || c == "{") { depth++; stack[depth] = key; key = ""; i++; continue }
+        if (c == "]" || c == "}") { if (depth > 0) depth--; key = ""; i++; continue }
+        if (c == ":" || c == " " || c == "\t") { i++; continue }
+        key = ""; i++
+      }
+    }'
 }
 
-path_state() { # $1 path -> example, here, gone or partial
-  case "$1" in
-    */path/to/*) printf 'example' ;;
-    /*|[A-Za-z]:/*) if [ -f "$1" ]; then printf 'here'; else printf 'gone'; fi ;;
-    *) printf 'partial' ;;
-  esac
+adapter_token() { # $1 command -> the word in it that ends in adapter.sh, as written
+  printf '%s\n' "$1" | grep -oE "[^\"' ]*adapter\.sh" | head -1
+}
+
+plain_path() { # $1 path as written -> with forward slashes, one between each part
+  # Windows records backslashes, doubled inside JSON.
+  # shellcheck disable=SC1003  # tr wants the backslash doubled, not quoted
+  printf '%s\n' "$1" | tr '\\' '/' | sed -E 's|/{2,}|/|g'
+}
+
+direct_run() { # $1 command  $2 the adapter word in it -> true when the command starts with that word, with no shell in front
+  local cmd="$1"
+  cmd="${cmd#"${cmd%%[! ]*}"}"
+  case "$cmd" in "$2"*) return 0 ;; esac
+  return 1
 }
 
 hook_path() { # $1 hooks file  $2 tool as the adapter names it  $3 the tool's name  $4 hook  $5 when it runs  $6 path
@@ -806,8 +1069,38 @@ hook_path() { # $1 hooks file  $2 tool as the adapter names it  $3 the tool's na
   esac
 }
 
-hooks_fact() { # $1 hooks file  $2 tool as the adapter names it  $3 the tool's name  $4 stop event it needs, or nothing
-  local f="$1" t="$2" tool="$3" ev="$4" miss="" named=0 bad=0 ps pe p
+hook_event() { # $1 hooks file  $2 tool as the adapter names it  $3 the tool's name  $4 hook  $5 event found, "-" for none  $6 event it needs
+  if [ "$5" = "-" ]; then
+    fault "$1 names adapter.sh $2 $4 under no event, so $3 never runs it." 3
+  elif [ "$5" != "$6" ] && [ "$4" = stop ]; then
+    fault "$1 puts adapter.sh $2 stop under the $5 event, not under $6. A report is never asked for from there." 3
+  elif [ "$5" != "$6" ]; then
+    fault "$1 puts adapter.sh $2 session-start under the $5 event, not under $6. The handover never reaches the agent from there." 3
+  fi
+}
+
+adapter_runs() { # $1 hooks file  $2 the tool's name  $3 adapter path  $4 1 when a command runs it directly
+  local dir miss="" s
+  [ "$(path_state "$3")" = here ] || return 0
+  dir="$(dirname "$3")"
+  for s in session-start.sh stop-report.sh fingerprint.sh; do
+    [ -e "$dir/$s" ] || miss="$miss $s"
+  done
+  if [ -n "$miss" ]; then
+    fault "adapter.sh runs session-start.sh and stop-report.sh from its own folder, and both read fingerprint.sh there. These are missing from $dir:$miss" 3
+  else
+    ok "The files adapter.sh needs are beside it in $dir: session-start.sh, stop-report.sh and fingerprint.sh."
+  fi
+  if [ "$4" -eq 1 ]; then
+    runs_direct "$3" "$2" ""
+  elif [ ! -x "$3" ]; then
+    fact "$1 runs adapter.sh through a shell, so the file needs no runnable mark. It has none: $3"
+  fi
+}
+
+hooks_fact() { # $1 hooks file  $2 tool as the adapter names it  $3 the tool's name  $4 event the start needs  $5 event the stop needs  $6 what the fact adds when both are wired
+  local f="$1" t="$2" tool="$3" ws="$4" we="$5" note="$6"
+  local entry miss="" named=0 bad=0 wrong=0 es="" ee="" ps="" pe="" ts="" te="" ds=0 de=0 p
   if [ ! -e "$f" ]; then
     fact "$f is not there, so no hooks from this pack are wired in it."
     return
@@ -816,8 +1109,20 @@ hooks_fact() { # $1 hooks file  $2 tool as the adapter names it  $3 the tool's n
     unknown "$f cannot be read, so its hooks were not checked."
     return
   fi
-  ps="$(adapter_path "$f" "$t" session-start)" || ps=""
-  pe="$(adapter_path "$f" "$t" stop)" || pe=""
+  entry="$(adapter_entry "$f" "$t" session-start)"
+  if [ -n "$entry" ]; then
+    es="${entry%%$'\t'*}"
+    ts="$(adapter_token "${entry#*$'\t'}")"
+    ps="$(plain_path "$ts")"
+    direct_run "${entry#*$'\t'}" "$ts" && ds=1
+  fi
+  entry="$(adapter_entry "$f" "$t" stop)"
+  if [ -n "$entry" ]; then
+    ee="${entry%%$'\t'*}"
+    te="$(adapter_token "${entry#*$'\t'}")"
+    pe="$(plain_path "$te")"
+    direct_run "${entry#*$'\t'}" "$te" && de=1
+  fi
   for p in "$ps" "$pe"; do
     [ -n "$p" ] || continue
     named=1
@@ -825,31 +1130,58 @@ hooks_fact() { # $1 hooks file  $2 tool as the adapter names it  $3 the tool's n
   done
   [ -n "$ps" ] || miss="$miss adapter.sh $t session-start,"
   [ -n "$pe" ] || miss="$miss adapter.sh $t stop,"
-  [ -n "$ev" ] && ! grep -Fq "\"$ev\"" "$f" && miss="$miss the $ev event,"
+  [ -n "$ps" ] && [ "$es" != "$ws" ] && wrong=1
+  [ -n "$pe" ] && [ "$ee" != "$we" ] && wrong=1
+  [ "$wrong" -eq 1 ] && bad=1
   if [ "$named" -eq 0 ]; then
     fact "$f wires no hooks from this pack."
   elif [ -n "$miss" ]; then
     fact "$f wires part of the hooks. It does not name:${miss%,}."
   elif [ "$bad" -eq 0 ]; then
-    fact "$f names both hook commands, adapter.sh $t session-start and adapter.sh $t stop${ev:+, and the $ev event the stop needs}."
+    fact "$f names both hook commands, adapter.sh $t session-start and adapter.sh $t stop$note."
+  fi
+  [ -n "$ps" ] && hook_event "$f" "$t" "$tool" session-start "$es" "$ws"
+  [ -n "$pe" ] && hook_event "$f" "$t" "$tool" stop "$ee" "$we"
+  if [ "$wrong" -eq 0 ] && [ -n "$ps" ] && [ -n "$pe" ]; then
+    ok "Each hook command in $f sits under the event it needs: adapter.sh $t session-start under $ws, adapter.sh $t stop under $we."
+  elif [ "$wrong" -eq 0 ] && [ -n "$ps" ]; then
+    ok "The hook command in $f, adapter.sh $t session-start, sits under the event it needs, $ws."
+  elif [ "$wrong" -eq 0 ] && [ -n "$pe" ]; then
+    ok "The hook command in $f, adapter.sh $t stop, sits under the event it needs, $we."
   fi
   hook_path "$f" "$t" "$tool" session-start "the start of a session" "$ps"
   hook_path "$f" "$t" "$tool" stop "the end of a session" "$pe"
+  # The adapter itself, once per file the commands name.
+  if [ -n "$ps" ] && [ "$ps" = "$pe" ]; then
+    [ "$de" -eq 1 ] && ds=1
+    adapter_runs "$f" "$tool" "$ps" "$ds"
+  else
+    [ -n "$ps" ] && adapter_runs "$f" "$tool" "$ps" "$ds"
+    [ -n "$pe" ] && adapter_runs "$f" "$tool" "$pe" "$de"
+  fi
 }
 
 section "Gemini CLI"
 if [ ! -d "$gem" ]; then
   fact "Gemini CLI was not found: there is no $gem folder. There is nothing to check for it."
 else
+  # Set up for the pack and holding none of its skills, Gemini CLI is the tool
+  # to blame, the way Codex is above.
+  if [ "$gem_wired" -eq 1 ] && [ "$shared" -eq 0 ] && [ "$gem_own" -eq 0 ] && [ "${#expected[@]}" -gt 0 ]; then
+    fault "Gemini CLI is set up for this pack, but none of its skills are in the shared skills folder, $sdir, or in $gem/skills, so Gemini CLI has none of them." 1
+  fi
   routing_block "$gem/GEMINI.md" fact "Your Gemini CLI instructions file"
-  hooks_fact "$gem/settings.json" gemini "Gemini CLI" AfterAgent
+  hooks_fact "$gem/settings.json" gemini "Gemini CLI" SessionStart AfterAgent ", and the AfterAgent event the stop needs"
 fi
 
 section "Cursor"
 if [ ! -d "$cur" ]; then
   fact "Cursor was not found: there is no $cur folder. There is nothing to check for it."
 else
-  hooks_fact "$cur/hooks.json" cursor "Cursor" ""
+  if [ "$cur_wired" -eq 1 ] && [ "$shared" -eq 0 ] && [ "$cur_own" -eq 0 ] && [ "${#expected[@]}" -gt 0 ]; then
+    fault "Cursor is set up for this pack, but none of its skills are in the shared skills folder, $sdir, or in $cur/skills, so Cursor has none of them." 1
+  fi
+  hooks_fact "$cur/hooks.json" cursor "Cursor" sessionStart stop ""
   unknown "Cursor reads the routing block from AGENTS.md in each project, and can wire hooks per project too. Neither was checked here."
 fi
 

@@ -241,8 +241,8 @@ hook settings, in [The hooks](docs/other-agents.md#the-hooks) there, and
 everything that was run rather than read.
 
 `doctor.sh` reads the shared skills folder and each tool's own, the routing
-block, and the hook settings of each tool it finds. It says "not checked" for
-what it cannot look at. It does not check which event each hook sits under.
+block, and the hook settings of each tool it finds, down to the event each
+hook sits under. It says "not checked" for what it cannot look at.
 
 The skills are a copy, so they stay as they were until you run the copy
 command again. The remove steps have not been run yet.
