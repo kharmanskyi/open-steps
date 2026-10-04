@@ -500,5 +500,10 @@ check "an activation the tool refused still counts as the model's choice: a hit 
   "$(has "$out" '| `os-done-or-not` | 1/2 |')"
 
 echo
+echo "CASE 15  Cursor fixture is labelled by its models.md row and counts Skill activation"
+out="$(score cursor-runner)"
+check "the Cursor column uses its models.md label" yes "$(has "$out" '| Skill | Cursor (Auto) |')"
+check "the Cursor Skill line is counted as one activation" yes "$(has "$out" '| `os-done-or-not` | 1/1 |')"
+echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

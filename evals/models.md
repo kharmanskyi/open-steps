@@ -29,3 +29,4 @@ One rule if you edit the table: no `|` inside a cell, it splits the cell.
 | claude-opus-5 | Opus 5 |
 | codex:gpt-6-sol | GPT-6 Sol (Codex) |
 | gemini-cli:gemini-3.5-flash-lite | Gemini 3.5 Flash Lite (Gemini CLI) |
+| cursor:Auto | Cursor (Auto) |
