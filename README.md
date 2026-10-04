@@ -261,10 +261,9 @@ skill switch on by itself? Three off-topic questions, asked the same way,
 checked the opposite. Three runs per phrase is a smoke test, not a benchmark.
 
 The chart and the table are Claude Code. The same phrases were run on Codex
-CLI and Gemini CLI by contributors, and what each tool counts as "switched
-on", what was run on every tool, and what the misses show are in
-[evals/README.md](evals/README.md#what-was-run-on-each-tool). Cursor CLI is
-not measured yet.
+CLI, Cursor CLI and Gemini CLI by contributors, and what each tool counts as
+"switched on", what was run on every tool, and what the misses show are in
+[evals/README.md](evals/README.md#what-was-run-on-each-tool).
 
 ![Activation per skill on Haiku 4.5, Sonnet 5 and Opus 5](assets/activation.svg)
 

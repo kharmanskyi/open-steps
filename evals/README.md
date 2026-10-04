@@ -15,9 +15,10 @@ scripts in between, and a check that keeps the scripts honest.
 - **[`results.md`](results.md) is what came back.** Every skill and every
   phrase, one model next to another. The scorer writes this file and nobody
   types it, which is how you can check the numbers in the main README.
-  [`results-codex.md`](results-codex.md) and
-  [`results-gemini-cli.md`](results-gemini-cli.md) are the same for one day
-  each of Codex CLI and Gemini CLI, activation and off-topic phrases only.
+  [`results-codex.md`](results-codex.md), [`results-cursor.md`](results-cursor.md)
+  and [`results-gemini-cli.md`](results-gemini-cli.md) are the same for one
+  day each of Codex CLI, Cursor CLI and Gemini CLI, activation and off-topic
+  phrases only.
 - **`run.sh` does the asking.** It asks each phrase three times, on a machine
   where the pack is properly installed, and writes down which skill switched
   on. Then it hands the messy report to the agent twice: once as normal, once
@@ -135,8 +136,8 @@ bash evals/test.sh
 ## Measuring another agent
 
 `run.sh` decides what to ask and when; one script per tool does the asking.
-Claude Code's is `agents/claude.sh`, Codex CLI's is `agents/codex.sh`, and
-Gemini CLI's is `agents/gemini-cli.sh`.
+Claude Code's is `agents/claude.sh`, Codex CLI's is `agents/codex.sh`, Cursor
+CLI's is `agents/cursor.sh`, and Gemini CLI's is `agents/gemini-cli.sh`.
 `EVAL_AGENT` picks another by name from the same folder, or by path while it
 is still being written, and the model names are then that tool's own:
 
@@ -184,7 +185,8 @@ stream files carry the agent's name, and a Claude model id under another
 agent never wears a Claude tier name. CASE 13 puts the Codex runner through a
 stand-in `codex` that answers in the shape `codex exec --json` writes, and
 CASE 14 the Gemini CLI runner through a stand-in `gemini` that answers in the
-shape `gemini -p -o stream-json` writes. Try a new runner the same way before
+shape `gemini -p -o stream-json` writes, and CASE 15 scores a Cursor CLI
+stream under its `models.md` row. Try a new runner the same way before
 the first paid run, then with one real phrase.
 A day measured through it is scored on its own, never into `results.md`:
 `python3 evals/score.py --print <that day> > evals/results-<agent>.md`, as
@@ -215,7 +217,7 @@ The numbers in brackets point to the notes under the table.
 |---|---|---|---|---|---|---|
 | Claude Code | watched (1) | in place (2) | watched (2) | watched (2) | measured: 85% to 100% (3) | measured: 9/9 and 8/9 (4) |
 | Codex CLI | watched (5) | from docs, in place (6) | checked by hand (7) | checked by hand (7) | measured: right skill read in 75 of 75, first in 70 (8) | did not start on 0.151 (9) |
-| Cursor CLI | watched (10) | from docs | watched (10) | watched: asks, cannot require (10, 11) | not measured (12) | not tried |
+| Cursor CLI | watched (10) | from docs, in place (12) | watched (10) | watched: asks, cannot require (10, 11) | measured in part: right skill read in 12 of the 12 runs that got an answer (12) | not tried |
 | Gemini CLI | watched (10) | in place (10, 13) | watched (10) | watched: can refuse (10, 14) | measured: right skill called in 54 of 75, the other 21 reached for it by reading its file (15) | not tried |
 
 1. Installed as a plugin from a clean, empty account, with both hooks
@@ -250,9 +252,13 @@ The numbers in brackets point to the notes under the table.
 11. A stop cannot be blocked on Cursor CLI. So the report is asked for as a
     follow-up message, not required. A run with no one at the keyboard
     (`agent -p`) did not reach the stop hook.
-12. No skill has been seen switching on from a phrase on Cursor CLI yet.
-    There, `os-done-or-not` ran when the stop hook asked for it. Help wanted:
-    [#40](https://github.com/kharmanskyi/open-steps/issues/40) Cursor CLI.
+12. 2026-10-04, Cursor CLI 2026.09.26 on Windows 11, Auto mode on the Free
+    plan, a contributor's runs scored by the maintainer. Switching on means the
+    agent read the right skill's `SKILL.md`. The plan's usage limit ran out
+    three minutes into the sweep: 12 of the 84 runs got an answer from the
+    model, and in all 12 the right skill was read. The other 72 hold no answer,
+    so they measure the plan, not the pack. Earlier, `os-done-or-not` ran
+    there when the stop hook asked for it. See [On Cursor CLI](#on-cursor-cli).
 13. Watched in place on 0.58.0. It was not seen steering a skill.
 14. On Gemini CLI the stop hook can refuse, on `AfterAgent`. Gemini's file
     tool cannot write outside the workspace. In a run with no one at the
@@ -380,6 +386,37 @@ when the agent makes that call, as the test script
   in the README applies here too. Phrase by phrase:
   [`results-gemini-cli.md`](results-gemini-cli.md).
 
+### On Cursor CLI
+
+On 2026-10-04 a contributor ran the same 25 phrases and 3 off-topic questions
+on Cursor CLI 2026.09.26, three times each, on Windows 11, in Auto mode on the
+Free plan, so Cursor picked the model. Cursor has no skill tool: it lists the
+installed skills to the model, and the model opens one by reading its
+`SKILL.md`. So there a skill counts as switched on when the agent reads that
+file, as the test script [`agents/cursor.sh`](agents/cursor.sh) defines it.
+
+| On Cursor CLI 2026.09.26, Auto | Runs |
+|---|---|
+| Runs in which the model answered at all | 12/84 |
+| The right skill was read, of those | 12/12 |
+| Another skill was read | 0/12 |
+| Off-topic questions that got an answer | 0/9 |
+
+- The Free plan's usage limit ran out three minutes into the sweep. 76 of the
+  84 runs ended with Cursor's limit message, and 72 transcripts hold only the
+  opening line and the question, with no answer from the model. The scorer
+  counts those as misses, so its page, [`results-cursor.md`](results-cursor.md),
+  shows 12 of 75. That figure measures the plan, not the pack; the rows above
+  are the honest reading of the same files.
+- Where the model did answer, the pack switched on every time: 11 of 11 for
+  `os-done-or-not` and 1 of 1 for `os-whats-next`, the only two skills the
+  sweep reached before the limit. No run read a skill other than the one asked
+  for. Twelve runs on two skills is a smoke test of the runner, not of the pack.
+- These are the contributor's runs and my scoring from the transcripts. I did
+  not re-run them, and Cursor is not installed here.
+- Only switching on was tried, not the quality of the answers and not the
+  premortem. A full sweep needs a plan whose limit outlasts 84 runs.
+
 ## How to read the numbers fairly
 
 The runs happen on a machine where the pack is installed and working. The
@@ -398,8 +435,9 @@ among those opened, as that tool's runner defines opening: on Codex a read of
 the skill's file, first in 70 of the 75 runs; on Gemini CLI a call of its
 skill tool, which headless came back "tool not registered" every time, so a
 hit there is the choice and not a loaded skill. Only the activation and
-off-topic phrases ran on those two, so their pages, `results-codex.md` and
-`results-gemini-cli.md`, say "Not run." for the quality and premortem parts.
+off-topic phrases ran on those tools, so their pages, `results-codex.md`,
+`results-cursor.md` and `results-gemini-cli.md`, say "Not run." for the
+quality and premortem parts.
 Each is written with
 `python3 evals/score.py --print <that day> > evals/results-<agent>.md`, never
 by pointing the scorer at a folder that also holds Claude days: there it takes

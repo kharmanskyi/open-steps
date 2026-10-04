@@ -59,13 +59,11 @@ These notes are about Claude Code only, since the other tools ignore
 
 ## Measuring another tool
 
-Want the evals to measure another tool? A runner for
-[Cursor](https://github.com/kharmanskyi/open-steps/issues/40) is an open issue.
-The contract is in
+Want the evals to measure another tool? The contract is in
 [Measuring another agent](evals/README.md#measuring-another-agent);
-`evals/agents/codex.sh`, the Codex CLI runner, is a worked example for a tool
-with no skill tool, and `evals/agents/gemini-cli.sh`, the Gemini CLI runner,
-for a tool with one.
+`evals/agents/codex.sh` and `evals/agents/cursor.sh`, the Codex CLI and
+Cursor CLI runners, are worked examples for a tool with no skill tool, and
+`evals/agents/gemini-cli.sh`, the Gemini CLI runner, for a tool with one.
 
 ## Tests
 

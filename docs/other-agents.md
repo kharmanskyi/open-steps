@@ -59,7 +59,7 @@ same prompt from `references/premortem-prompt.md`, and on Codex CLI 0.151
 that is what happened. In the same four runs no fresh agent started. The agent
 ran the review itself, so that review was not independent. The skill has
 changed since those runs, and they have not been re-run. On Codex CLI 0.157.1
-this is not measured, and on Cursor and Gemini CLI it was not tried.
+this is not measured, and on Cursor CLI and Gemini CLI it was not tried.
 
 ## The routing block
 
@@ -507,15 +507,15 @@ Google sign-in.
 
 ## What differs between the tools
 
-- **Activation is measured on Claude Code, Codex CLI and Gemini CLI.** On
-  Codex CLI 0.157.1 the right skill was read in 75 of 75 runs, first in 70.
-  On Gemini CLI 0.62.0 the right skill was called in 54 of 75 runs, and the
-  other 21 reached for it by reading its file; headless, Gemini did not load
-  any skill. The details are in the evals, [On Codex CLI](../evals/README.md#on-codex-cli)
-  and [On Gemini CLI](../evals/README.md#on-gemini-cli). On Cursor CLI no figure is
-  given, because none was measured; the only skill seen switching on there is
-  `os-done-or-not`, when the stop hook asked for it. Its runner is an open
-  issue: [#40](https://github.com/kharmanskyi/open-steps/issues/40).
+- **Activation is measured on every tool, on Cursor CLI in part.** On Codex
+  CLI 0.157.1 the right skill was read in 75 of 75 runs, first in 70. On
+  Gemini CLI 0.62.0 the right skill was called in 54 of 75 runs, and the other
+  21 reached for it by reading its file; headless, Gemini did not load any
+  skill. On Cursor CLI 2026.09.26 the Free plan's limit ran out three minutes
+  in: 12 of 84 runs got an answer, and the right skill was read in all 12. The
+  details are in the evals: [On Codex CLI](../evals/README.md#on-codex-cli),
+  [On Cursor CLI](../evals/README.md#on-cursor-cli) and
+  [On Gemini CLI](../evals/README.md#on-gemini-cli).
 - **Codex may shorten the descriptions.** Per Codex's skills documentation
   (https://developers.openai.com/codex/skills/, read 2026-09-27), the list of
   skills gets at most 2% of the context window, or 8,000 characters when the
