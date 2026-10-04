@@ -18,7 +18,9 @@ scripts in between, and a check that keeps the scripts honest.
   [`results-codex.md`](results-codex.md), [`results-cursor.md`](results-cursor.md)
   and [`results-gemini-cli.md`](results-gemini-cli.md) are the same for one
   day each of Codex CLI, Cursor CLI and Gemini CLI, activation and off-topic
-  phrases only.
+  phrases only. A run that ended before the model answered counts as a miss
+  on those pages; what the Cursor page's figure measures is under
+  [On Cursor CLI](#on-cursor-cli).
 - **`run.sh` does the asking.** It asks each phrase three times, on a machine
   where the pack is properly installed, and writes down which skill switched
   on. Then it hands the messy report to the agent twice: once as normal, once
@@ -29,8 +31,9 @@ scripts in between, and a check that keeps the scripts honest.
   the model; `EVAL_ONLY` picks phases (`activation negatives quality
   premortem`), so one part can be re-measured without paying for the rest.
   `EVAL_AGENT` picks the tool: the asking is one script per tool in
-  `agents/`, Claude Code's by default. Codex CLI's (`EVAL_AGENT=codex`) can
-  run only the activation and off-topic phrases, so its day is run with
+  `agents/`, Claude Code's by default. The Codex CLI, Cursor CLI and Gemini CLI
+  ones (`EVAL_AGENT=codex`, `cursor`, `gemini-cli`) run only the activation
+  and off-topic phrases, so their day is run with
   `EVAL_ONLY="activation negatives"`. The section "Measuring another agent"
   below is the contract such a script keeps.
 - **Every run is headless, so nobody answers a permission prompt.** A tool
@@ -45,11 +48,11 @@ scripts in between, and a check that keeps the scripts honest.
   call, which the model makes before it is denied, and that count is the
   measurement.
 - **`score.py` does the counting.** No AI judges anything here. Whether a skill
-  switched on comes from the log of what the agent called; on Codex, which has
-  no skill tool, `agents/codex.sh` writes that log from the agent's reads of a
-  skill's `SKILL.md`, and on Gemini CLI `agents/gemini-cli.sh` writes it from
-  the agent's calls of its activate_skill tool, as the header of each script
-  defines. Quality comes from
+  switched on comes from the log of what the agent called; on Codex CLI and Cursor
+  CLI, which have no skill tool, `agents/codex.sh` and `agents/cursor.sh`
+  write that log from the agent's reads of a skill's `SKILL.md`, and on Gemini
+  CLI `agents/gemini-cli.sh` writes it from the agent's calls of its
+  activate_skill tool, as the header of each script defines. Quality comes from
   plain word checks: is the verdict block there, is there a warning row, how
   long is the answer, did any commit codes leak through, how much jargon is
   left. Whether the `with` arm really had the pack loaded comes from the same
@@ -185,8 +188,8 @@ stream files carry the agent's name, and a Claude model id under another
 agent never wears a Claude tier name. CASE 13 puts the Codex runner through a
 stand-in `codex` that answers in the shape `codex exec --json` writes, and
 CASE 14 the Gemini CLI runner through a stand-in `gemini` that answers in the
-shape `gemini -p -o stream-json` writes, and CASE 15 scores a Cursor CLI
-stream under its `models.md` row. Try a new runner the same way before
+shape `gemini -p -o stream-json` writes. CASE 15 scores a Cursor CLI stream
+under its `models.md` row. Try a new runner the same way before
 the first paid run, then with one real phrase.
 A day measured through it is scored on its own, never into `results.md`:
 `python3 evals/score.py --print <that day> > evals/results-<agent>.md`, as
@@ -217,7 +220,7 @@ The numbers in brackets point to the notes under the table.
 |---|---|---|---|---|---|---|
 | Claude Code | watched (1) | in place (2) | watched (2) | watched (2) | measured: 85% to 100% (3) | measured: 9/9 and 8/9 (4) |
 | Codex CLI | watched (5) | from docs, in place (6) | checked by hand (7) | checked by hand (7) | measured: right skill read in 75 of 75, first in 70 (8) | did not start on 0.151 (9) |
-| Cursor CLI | watched (10) | from docs, in place (12) | watched (10) | watched: asks, cannot require (10, 11) | measured in part: right skill read in 12 of the 12 runs that got an answer (12) | not tried |
+| Cursor CLI | watched (10) | from docs; in the measured runs the test script put it in the project's `AGENTS.md` (12) | watched (10) | watched: asks, cannot require (10, 11) | measured in part: right skill read in 12 of the 12 runs that got an answer (12) | not tried |
 | Gemini CLI | watched (10) | in place (10, 13) | watched (10) | watched: can refuse (10, 14) | measured: right skill called in 54 of 75, the other 21 reached for it by reading its file (15) | not tried |
 
 1. Installed as a plugin from a clean, empty account, with both hooks
@@ -246,9 +249,10 @@ The numbers in brackets point to the notes under the table.
    independent. This check came before later changes to the skill. It is not
    measured on 0.157.1. In the 0.157.1 activation runs no transcript shows one
    starting, but 5 of 9 were cut off. See [On Codex CLI](#on-codex-cli).
-10. Every Cursor CLI and Gemini CLI cell: Cursor CLI 2026.09.02 and Gemini
-    CLI 0.58.0, on Windows 11, in one contributor's runs. The maintainer has
-    not reproduced them. The Cursor desktop app has not been tried.
+10. The install and hook cells for Cursor CLI and Gemini CLI: Cursor CLI
+    2026.09.02 and Gemini CLI 0.58.0, on Windows 11, in one contributor's
+    runs. The maintainer has not reproduced them. The Cursor desktop app has
+    not been tried. The switching-on cells are notes 12 and 15.
 11. A stop cannot be blocked on Cursor CLI. So the report is asked for as a
     follow-up message, not required. A run with no one at the keyboard
     (`agent -p`) did not reach the stop hook.
@@ -372,7 +376,8 @@ when the agent makes that call, as the test script
   skill, so the choice was right in 75 of 75; the tool call was made in 54.
 - No skill's text reached the model in any run. Headless, without the
   setting that lets the agent act on its own, Gemini CLI 0.62.0 did not
-  register the skill tool, and all 56 calls came back "tool not registered".
+  register the skill tool, and every call came back "tool not registered"
+  (56 calls: two runs called twice).
   The call is still the agent's choice, which is what this number counts, the
   same way the Claude Code numbers count a skill call before it is allowed.
   How the skills behave once loaded on Gemini CLI is not measured.
@@ -403,8 +408,9 @@ file, as the test script [`agents/cursor.sh`](agents/cursor.sh) defines it.
 | Off-topic questions that got an answer | 0/9 |
 
 - The Free plan's usage limit ran out three minutes into the sweep. 76 of the
-  84 runs ended with Cursor's limit message, and 72 transcripts hold only the
-  opening line and the question, with no answer from the model. The scorer
+  84 runs ended with Cursor's limit message, 5 of them after the model had
+  already answered, and 72 transcripts hold only the opening line and the
+  question, with no answer from the model. The scorer
   counts those as misses, so its page, [`results-cursor.md`](results-cursor.md),
   shows 12 of 75. That figure measures the plan, not the pack; the rows above
   are the honest reading of the same files.
@@ -426,15 +432,16 @@ you would actually use it. It does not measure the skill descriptions on their
 own. A clean-room number would be lower and less useful, and a clean room is
 not available anyway: the reasons are in the traps at the bottom.
 
-That is the Claude Code machine. The Codex CLI numbers come from one
-contributor's runs on Linux (Codex CLI 0.157.1, 2026-09-28) and the Gemini
-CLI numbers from another contributor's runs on Windows 11 (Gemini CLI 0.62.0,
-2026-10-02); the maintainer scored both from the transcripts and did not
-re-run them. On every tool a phrase counts as a hit when the right skill was
-among those opened, as that tool's runner defines opening: on Codex a read of
-the skill's file, first in 70 of the 75 runs; on Gemini CLI a call of its
-skill tool, which headless came back "tool not registered" every time, so a
-hit there is the choice and not a loaded skill. Only the activation and
+That is the Claude Code machine. The other numbers come from contributors'
+runs: Codex CLI 0.157.1 on Linux (2026-09-28), Gemini CLI 0.62.0 on Windows
+11 (2026-10-02) and Cursor CLI 2026.09.26 on Windows 11 (2026-10-04, where
+the Free plan's limit left 12 of 84 runs with an answer); the maintainer
+scored all three from the transcripts and did not re-run them. On every tool
+a phrase counts as a hit when the right skill was among those opened, as that
+tool's runner defines opening: on Codex CLI and Cursor CLI a read of the
+skill's file, on Codex first in 70 of the 75 runs; on Gemini CLI a call of
+its skill tool, which headless came back "tool not registered" every time,
+so a hit there is the choice and not a loaded skill. Only the activation and
 off-topic phrases ran on those tools, so their pages, `results-codex.md`,
 `results-cursor.md` and `results-gemini-cli.md`, say "Not run." for the
 quality and premortem parts.

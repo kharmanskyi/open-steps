@@ -35,7 +35,7 @@
 
 **安装前要知道：如果一个 pull request 的检查全部通过、评审已经批准，这个技能包会自己把它合并（merge）。** 合并前，智能体会再核实一次。在 Claude Code 上，合并不会弹出权限确认。据这些工具的文档，在 Codex、Cursor 和 Gemini CLI 上，合并命令要经过该工具自己的权限设置。有两种情况会阻止合并：某条说法没有通过核实，或者任务上注明只在收到指令时合并。如果你希望只在你下指令时才合并，把这一点写进常驻指令文件：`~/.claude/CLAUDE.md`、`~/.codex/AGENTS.md`、`~/.gemini/GEMINI.md`，或 Cursor 上项目里的 `AGENTS.md`。
 
-这个技能包可以装进 Claude Code、Codex、Cursor 和 Gemini CLI。在 Claude Code 上，一个插件用一条命令接好技能和两个钩子。在 Codex、Cursor 和 Gemini CLI 上，一条复制命令装好技能，钩子要在每个工具里手动设置。每个工具上实际运行过什么、哪些来自它的文档，见[英文 README 里的表格](README.md#what-was-run-on-each-tool)。
+这个技能包可以装进 Claude Code、Codex、Cursor 和 Gemini CLI。在 Claude Code 上，一个插件用一条命令接好技能和两个钩子。在 Codex、Cursor 和 Gemini CLI 上，一条复制命令装好技能，钩子要在每个工具里手动设置。每个工具上实际运行过什么、哪些来自它的文档，见[evals 里的表格（英文）](evals/README.md#what-was-run-on-each-tool)。
 
 ### 先做这一步，任何工具都一样
 

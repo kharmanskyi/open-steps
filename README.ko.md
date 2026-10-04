@@ -35,7 +35,7 @@ Claude Code, Codex, Cursor, Gemini CLI에서 쓰는, 쉬운 말로 된 에이전
 
 **설치 전에 알아 둘 점: pull request의 검사가 모두 통과하고 리뷰가 승인되면, 이 팩은 그것을 스스로 병합(merge)합니다.** 그 전에 에이전트가 한 번 더 확인합니다. Claude Code에서는 권한 확인 없이 병합됩니다. Codex, Cursor, Gemini CLI에서는 병합 명령이 각 도구의 권한 설정을 거칩니다. 각 도구의 문서에 그렇게 나와 있습니다. 병합을 멈추는 것은 두 가지입니다. 확인을 통과하지 못한 주장, 또는 명령할 때만 병합하라는 작업 메모입니다. 명령할 때만 병합하게 하려면 상시 지침 파일에 그렇게 적어 두세요: `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.gemini/GEMINI.md`, 또는 Cursor에서는 프로젝트의 `AGENTS.md`.
 
-이 팩은 Claude Code, Codex, Cursor, Gemini CLI에 설치됩니다. Claude Code에서는 플러그인이 명령 한 번으로 스킬과 두 훅을 연결합니다. Codex, Cursor, Gemini CLI에서는 복사 명령 하나로 스킬이 설치되고, 훅은 도구마다 직접 설정합니다. 도구별로 실제로 실행한 것과 문서에서 가져온 것은 [영어 README의 표](README.md#what-was-run-on-each-tool)에 있습니다.
+이 팩은 Claude Code, Codex, Cursor, Gemini CLI에 설치됩니다. Claude Code에서는 플러그인이 명령 한 번으로 스킬과 두 훅을 연결합니다. Codex, Cursor, Gemini CLI에서는 복사 명령 하나로 스킬이 설치되고, 훅은 도구마다 직접 설정합니다. 도구별로 실제로 실행한 것과 문서에서 가져온 것은 [evals의 표 (영어)](evals/README.md#what-was-run-on-each-tool)에 있습니다.
 
 ### 먼저, 모든 도구 공통
 

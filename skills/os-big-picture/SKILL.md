@@ -14,7 +14,6 @@ description: >-
 allowed-tools:
   - "Read(~/.claude/open-steps/**)"
   - "Edit(BIG-PICTURE.md)"
-  - "Write(BIG-PICTURE.md)"
   - "Bash(bash ${CLAUDE_SKILL_DIR}/scripts/census.sh *)"
   - "Bash(git rev-parse --git-dir)"
   - "Bash(gh repo view *)"

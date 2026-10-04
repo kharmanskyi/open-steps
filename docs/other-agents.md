@@ -11,7 +11,7 @@ the wiring differs. Setup has four parts:
    adapter, `hooks/adapter.sh`.
 4. Check the install with `doctor.sh`.
 
-What was run on each tool is summed up in the README, in
+What was run on each tool is summed up in the evals README, in
 [What was run on each tool](../evals/README.md#what-was-run-on-each-tool). The runs
 themselves are described under [What was actually run](#what-was-actually-run).
 Where a step comes from a tool's documentation and was not run, this page says
@@ -97,7 +97,7 @@ tools differ in what they do with the answer:
 | Gemini CLI | hands the handover to the model, through the adapter | refuses on `AfterAgent`, through the adapter | `~/.gemini/settings.json`, through the adapter |
 
 Whether each cell was watched, checked by hand or read in the documentation is
-in the README table,
+in the evals README table,
 [What was run on each tool](../evals/README.md#what-was-run-on-each-tool).
 
 The settings are the same on every tool, because the scripts read them, not
@@ -417,7 +417,7 @@ report appeared four times in one transcript.
 On Codex CLI 0.157.1, on 2026-09-28, a contributor measured whether the right
 skill switches on by itself, and the maintainer scored the transcripts. The
 agent read every skill of the pack when asked a matching question. The
-numbers and what they mean are in the README,
+numbers and what they mean are in the evals README,
 [On Codex CLI](../evals/README.md#on-codex-cli). In those runs the agent waited on
 work it had handed off, but no transcript shows a fresh agent starting, and 5
 of the 9 transcripts were cut off.
@@ -517,7 +517,7 @@ Google sign-in.
   [On Cursor CLI](../evals/README.md#on-cursor-cli) and
   [On Gemini CLI](../evals/README.md#on-gemini-cli).
 - **Codex may shorten the descriptions.** Per Codex's skills documentation
-  (https://developers.openai.com/codex/skills/, read 2026-09-27), the list of
+  (https://developers.openai.com/codex/skills, read 2026-09-27), the list of
   skills gets at most 2% of the context window, or 8,000 characters when the
   window size is unknown. When many skills are installed, their descriptions
   are shortened first. So on Codex, activation may drop when many other skills

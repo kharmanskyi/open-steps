@@ -35,7 +35,7 @@ Claude Code, Codex CLI, Cursor CLI or Gemini CLI.
    `os-what-could-go-wrong` falls back to `references/premortem-prompt.md`.
    The syntax is under
    [Claude Code permission syntax](#claude-code-permission-syntax).
-7. **Keep a `SKILL.md` short.** The longest one here is 172 lines. Past about
+7. **Keep a `SKILL.md` short.** The longest one here is about 170 lines. Past about
    that, it carries something that belongs in a script or in `references/`.
    The measured half of `os-big-picture` moved into `scripts/census.sh` for
    this reason, and got tests out of it.
@@ -71,7 +71,8 @@ Cursor CLI runners, are worked examples for a tool with no skill tool, and
 `doctor.sh` and the scripts the skills ship. It uses throwaway repositories
 and a throwaway home folder, so it touches nothing of yours.
 `bash evals/test.sh` tests the scorer and the runners. It uses stand-ins for
-`claude`, `codex` and `gemini`, so no model is called. Neither needs Claude Code. To run
+`claude`, `codex` and `gemini`, and a recorded Cursor CLI stream, so no model
+is called. Neither needs Claude Code. To run
 a hook by hand, add `</dev/null`. Each hook reads from standard input, and
 without it the hook waits for a payload that never comes.
 

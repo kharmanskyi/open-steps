@@ -35,7 +35,7 @@ Las habilidades piden al agente que responda en el idioma en que usted le habla.
 
 **Antes de instalar, sepa esto: el paquete fusiona (merge) por su cuenta un pull request si sus comprobaciones están en verde y su revisión está aprobada.** Antes de fusionarlo, el agente lo verifica una vez más. En Claude Code la fusión ocurre sin pedir permiso. En Codex, Cursor y Gemini CLI el comando de fusión pasa por los ajustes de permisos de cada herramienta, según su documentación. Dos cosas detienen una fusión: una afirmación que no supera la verificación, o una nota en la tarea que diga que solo se fusiona por orden. Si quiere fusiones solo por orden suya, escríbalo en su archivo de instrucciones permanentes: `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.gemini/GEMINI.md` o el `AGENTS.md` del proyecto en Cursor.
 
-El paquete se instala en Claude Code, Codex, Cursor y Gemini CLI. En Claude Code un plugin conecta las habilidades y los dos hooks con un comando. En Codex, Cursor y Gemini CLI un comando de copia instala las habilidades, y los hooks se configuran a mano en cada herramienta. Qué se ejecutó en cada herramienta, y qué viene de su documentación, está en la [tabla del README en inglés](README.md#what-was-run-on-each-tool).
+El paquete se instala en Claude Code, Codex, Cursor y Gemini CLI. En Claude Code un plugin conecta las habilidades y los dos hooks con un comando. En Codex, Cursor y Gemini CLI un comando de copia instala las habilidades, y los hooks se configuran a mano en cada herramienta. Qué se ejecutó en cada herramienta, y qué viene de su documentación, está en la [tabla en inglés, en evals](evals/README.md#what-was-run-on-each-tool).
 
 ### Primero, para cualquier herramienta
 
