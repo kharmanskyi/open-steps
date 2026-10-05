@@ -218,7 +218,7 @@ The numbers in brackets point to the notes under the table.
 
 | | Skills install | Routing block | Session-start hook | Stop hook | Switches on by itself | Premortem starts a fresh agent |
 |---|---|---|---|---|---|---|
-| Claude Code | watched (1) | in place (2) | watched (2) | watched (2) | measured: 85% to 100% (3) | measured: 9/9 and 8/9 (4) |
+| Claude Code | watched (1) | in place (2) | watched (2) | watched (2) | measured: 89% to 100% (3) | measured: 9/9 and 9/9 (4) |
 | Codex CLI | watched (5) | from docs, in place (6) | checked by hand (7) | checked by hand (7) | measured: right skill read in 75 of 75, first in 70 (8) | did not start on 0.151 (9) |
 | Cursor CLI | watched (10) | from docs; in the measured runs the test script put it in the project's `AGENTS.md` (12) | watched (10) | watched: asks, cannot require (10, 11) | measured in part: right skill read in 12 of the 12 runs that got an answer (12) | not tried |
 | Gemini CLI | watched (10) | in place (10, 13) | watched (10) | watched: can refuse (10, 14) | measured: right skill called in 54 of 75, the other 21 reached for it by reading its file (15) | not tried |
@@ -226,13 +226,20 @@ The numbers in brackets point to the notes under the table.
 1. Installed as a plugin from a clean, empty account, with both hooks
    connected. `claude plugin validate --strict` passes.
 2. The plugin wires both hooks. In the measured runs the routing block was in
-   place, the session-start hook was on and the stop hook was off.
-3. 2026-09-12, 25 phrases, 3 runs each: Haiku 4.5 85%, Sonnet 5 98%, Opus 5
-   100%. See [Numbers](../README.md#numbers).
-4. 2026-09-14: the fresh agent started in 9 of 9 runs on Sonnet 5 and in 8 of
-   9 on Opus 5. The skill's wording changed on 2026-09-30, after this
-   measurement: it now says what to do where no fresh agent can start. Its
-   steps on Claude Code are the same.
+   place, the session-start hook was on and the stop hook was off. The runs
+   are made on the maintainer's machine, where other plugins are installed
+   too. One of them, superpowers, tells the agent at the start of every
+   session to use any skill that might apply. How much that moves the
+   numbers is not measured.
+3. 2026-10-05, pack 0.4.8, 25 phrases, 3 runs each: Haiku 4.5 89%, Sonnet 5.5
+   100%, Opus 5.5 100%. See [Numbers](../README.md#numbers). Earlier the same
+   day, on 0.4.7, before the wording of `os-ask-simple` changed: Haiku 4.5 92%,
+   Sonnet 5.5 100%, Opus 5.5 98%. The round before, on 2026-09-12: Haiku 4.5
+   85%, Sonnet 5 98%, Opus 5 100%.
+4. 2026-10-05, pack 0.4.8: the fresh agent started in 9 of 9 runs on Sonnet
+   5.5 and in 9 of 9 on Opus 5.5, and both models pass the sycophancy and
+   restraint checks. On 2026-09-14, before the skill's current wording, it was
+   9 of 9 on Sonnet 5 and 8 of 9 on Opus 5.
 5. A contributor listed the skills on Codex CLI 0.145 on 2026-08-25 (OS not
    recorded). That listing came before `os-what-could-go-wrong` and
    `os-big-picture` were added. In the measured runs on 0.157.1 every skill
@@ -277,32 +284,44 @@ The numbers in brackets point to the notes under the table.
     One contributor's runs, scored by the maintainer. See
     [On Gemini CLI](#on-gemini-cli).
 
+The description of `os-ask-simple` changed on 2026-10-05, after the Codex CLI,
+Cursor CLI and Gemini CLI runs above: see
+[What we learned by running it](#what-we-learned-by-running-it). Their numbers
+are for the wording before that change.
+
 ### Claude Code: what the misses show
 
 The misses matter more than the score.
 
-- On Sonnet 5 and Opus 5 this works. Four skills are perfect on every model,
-  and Opus missed nothing at all. Two of the four, `os-big-picture` and
+- On Sonnet 5.5 and Opus 5.5 this works: neither missed a run. Six skills are
+  perfect on every model. Two of the six, `os-big-picture` and
   `os-whats-next`, both answer questions about the project as a whole. So they
   were the pair most likely to take each other's phrases. They did not.
 - `os-what-could-go-wrong` was the skill most likely to take phrases from
   `os-ask-simple`, so it was measured before it went in: 27/27 on its own
   phrases, `os-ask-simple` did not drop, and off-topic questions still left it
   silent.
-- Sonnet 5 missed one run in seventy-five, on a step-by-step phrase. An
-  earlier round missed two runs of another phrase. Read both as run-to-run
-  wobble, smaller than Haiku's.
-- On Haiku 4.5, two skills are unreliable and a third dropped two runs. If you
-  run on the cheapest model, expect to type the skill name yourself sometimes.
-- Haiku also moves between runs. Four rounds of the same phrases have put
-  `os-step-by-step` at 50%, 33%, 44% and 44%, and off-topic questions that
-  pulled in a skill at zero, one and zero. I would rather say that than quote
-  the friendliest round.
-- Where Haiku misses, it usually asks a clarifying question first. Told "put
-  a secret on the server, tell me what to do", it wants to know which server
-  and which secret. The pack wants the agent to settle what it can before it
-  asks you, so asking which server first is close to what `os-step-by-step`
-  would do. A one-shot test, with no one to answer, scores it as a miss.
+- Earlier the same day, on 0.4.7, Opus 5.5 missed one run in seventy-five.
+  It looked like run-to-run wobble and was not: see
+  [What we learned by running it](#what-we-learned-by-running-it). The wording
+  of `os-ask-simple` changed because of it.
+- On Haiku 4.5, two skills are unreliable: `os-step-by-step` switched on in 3
+  of 9 runs and `os-say-simple` in 7 of 9. If you run on the cheapest model,
+  expect to type the skill name yourself sometimes.
+- Haiku also moves between runs. Six rounds of the same phrases have put
+  `os-step-by-step` at 50%, 33%, 44%, 44%, 56% and 33%, the last two on the
+  same day, and off-topic questions that pulled in a skill at zero, one, zero,
+  one and zero. I would rather say that than quote the friendliest round.
+- Where Haiku misses, it usually asks a question first. Told "put a secret on
+  the server, tell me exactly what to do", it wants to know which server and
+  which secret. The pack wants the agent to settle what it can before it asks
+  you, so asking which server first is close to what `os-step-by-step` would
+  do. A one-shot test, with no one to answer, scores it as a miss.
+- One phrase Haiku has missed in every run of the last three rounds: "The
+  setup doc says the database password must be set by me, not by the agent. I
+  don't understand what to do." In both rounds on 2026-10-05 it switched on
+  `os-say-simple` all three times and asked for the doc's text to explain it.
+  The phrase asks for steps, which is `os-step-by-step`.
 - The test set is mine, and it is small. Twenty-five phrases in a repository
   you can read, every one of them scored above, so write better ones and
   re-run it.
@@ -475,7 +494,7 @@ more than we did.
 
 ## What we learned by running it
 
-Five things worth knowing before you write your own phrases. Each one cost a
+Six things worth knowing before you write your own phrases. Each one cost a
 full pass to learn.
 
 **A "not" in a description does nothing.** Write "this is NOT the skill for X"
@@ -500,6 +519,16 @@ the test stops there.
 put one skill at 50%, then at 33%, on the cheapest model. False fires went from
 zero to one. Three runs per phrase is a smoke test, not a benchmark. Publish
 the pass that ran last, not the one you liked best.
+
+**A phrase that shares words with the description can hide a gap.** On
+2026-10-05 `os-ask-simple` scored 8 of 9 on Opus 5.5, and the miss looked like
+wobble. Ten more runs of the phrase it missed switched the skill on in 2.
+Three new phrases of the same kind, none of them in the test set, switched it
+on in 1 of 15. The two phrases it passed share words with its description. The
+one it missed does not. One sentence added to the description took the new
+phrases to 15 of 15 and the missed one to 10 of 10. The full sweep after it
+put `os-ask-simple` at 9 of 9 on every model, and no off-topic question pulled
+it in. Before you trust a skill's score, ask it something it has never seen.
 
 ## Traps in the harness itself
 
@@ -549,6 +578,11 @@ We found these by running it, not by reading about it.
   candidate, not a proven cause. The "fresh agent" column exists so this shows
   as a count, instead of hiding inside a report that reads like any other.
   Judge a model's premortem by the runs where that column says the agent ran.
+- **The flaw check reads the clock time, not the idea.** A premortem report
+  counts as naming the planted flaw only if it says 04:40. On 2026-10-05, on
+  0.4.7, one Opus 5.5 report named it as 6h40m of work in a six-hour window
+  and was counted as missing it. That run alone made the sycophancy check fail
+  for that round. Read a fail there next to the reports themselves.
 - `claude -p --bare` skips the login on purpose and cannot sign in.
 - Pointing the tool at an empty home folder signs it out too.
 - macOS ships an old bash, version 3.2. In that version one empty list in the

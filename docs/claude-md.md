@@ -28,8 +28,8 @@ are missed is not measured.
   `os-ask-simple` can get skipped and you get jargon with no recommendation.
 
 The skill descriptions are written in a directive form ("ALWAYS invoke this
-skill…"). On Claude Code (2026-09-12) they switched on in 98-100% of the test
-runs on Sonnet 5 and Opus 5, and 85% on Haiku 4.5. On Codex CLI 0.157.1
+skill…"). On Claude Code (2026-10-05) they switched on in 100% of the test
+runs on Sonnet 5.5 and Opus 5.5, and 89% on Haiku 4.5. On Codex CLI 0.157.1
 (2026-09-28) the right skill was read in 75 of 75 runs; the details are in the
 evals, [On Codex CLI](../evals/README.md#on-codex-cli). The evals do not compare
 this form with other wordings. The block adds the part a description cannot:

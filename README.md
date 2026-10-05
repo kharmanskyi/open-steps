@@ -265,23 +265,23 @@ CLI, Cursor CLI and Gemini CLI by contributors, and what each tool counts as
 "switched on", what was run on every tool, and what the misses show are in
 [evals/README.md](evals/README.md#what-was-run-on-each-tool).
 
-![Activation per skill on Haiku 4.5, Sonnet 5 and Opus 5](assets/activation.svg)
+![Activation per skill on Haiku 4.5, Sonnet 5.5 and Opus 5.5](assets/activation.svg)
 
 <!-- numbers: score.py writes this table, edit the prose but not these rows -->
 
-Measured on 2026-09-12.
+Measured on 2026-10-05.
 
-| Skill | Haiku 4.5 | Sonnet 5 | Opus 5 |
+| Skill | Haiku 4.5 | Sonnet 5.5 | Opus 5.5 |
 |---|---|---|---|
-| `os-done-or-not` | 11/12 | 12/12 | 12/12 |
+| `os-done-or-not` | 12/12 | 12/12 | 12/12 |
 | `os-whats-next` | 9/9 | 9/9 | 9/9 |
 | `os-check-work` | 9/9 | 9/9 | 9/9 |
+| `os-ask-simple` | 9/9 | 9/9 | 9/9 |
 | `os-what-could-go-wrong` | 9/9 | 9/9 | 9/9 |
 | `os-big-picture` | 9/9 | 9/9 | 9/9 |
-| `os-ask-simple` | 7/9 | 9/9 | 9/9 |
-| `os-say-simple` | 6/9 | 9/9 | 9/9 |
-| `os-step-by-step` | 4/9 | 8/9 | 9/9 |
-| **All 25 phrases** | **85%** | **98%** | **100%** |
+| `os-say-simple` | 7/9 | 9/9 | 9/9 |
+| `os-step-by-step` | 3/9 | 9/9 | 9/9 |
+| **All 25 phrases** | **89%** | **100%** | **100%** |
 | Fired on an off-topic question | 0/9 | 0/9 | 0/9 |
 
 <!-- numbers: end -->
