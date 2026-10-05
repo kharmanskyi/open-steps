@@ -18,14 +18,21 @@ prefix is Claude Code's own and never fits a prefixed stream, so a Claude
 model run through another tool shows under its raw `agent:model` label until
 it gets a row of its own.
 
-One rule if you edit the table: no `|` inside a cell, it splits the cell.
+Two rules if you edit the table. No `|` inside a cell, it splits the cell.
+And a row fits a stream when its text is anywhere in the model id, and the
+first row that fits wins. So a newer id that contains an older one goes
+directly above it: `claude-opus-5-5` contains `claude-opus-5`, and below that
+row Opus 5.5 would be shown as Opus 5. A tier that is no longer measured
+keeps its row, so an older day still scores under its own names.
 
 ## Tiers
 
 | Matches | Shown as |
 |---|---|
 | claude-haiku-4-5 | Haiku 4.5 |
+| claude-sonnet-5-5 | Sonnet 5.5 |
 | claude-sonnet-5 | Sonnet 5 |
+| claude-opus-5-5 | Opus 5.5 |
 | claude-opus-5 | Opus 5 |
 | codex:gpt-6-sol | GPT-6 Sol (Codex) |
 | gemini-cli:gemini-3.5-flash-lite | Gemini 3.5 Flash Lite (Gemini CLI) |

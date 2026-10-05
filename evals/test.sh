@@ -504,6 +504,12 @@ echo "CASE 15  Cursor fixture is labelled by its models.md row and counts Skill 
 out="$(score cursor-runner)"
 check "the Cursor column uses its models.md label" yes "$(has "$out" '| Skill | Cursor (Auto) |')"
 check "the Cursor Skill line is counted as one activation" yes "$(has "$out" '| `os-done-or-not` | 1/1 |')"
+echo "CASE 16  a newer model is shown under its own name, never under the older one its id contains"
+out="$(score model-names)"
+check "Sonnet 5.5 and Opus 5.5 get their own columns, and Opus 5 keeps its own" yes \
+  "$(has "$out" '| Skill | Sonnet 5.5 | Opus 5.5 | Opus 5 |')"
+check "each run is counted in its own column" yes \
+  "$(has "$out" '| `os-done-or-not` | 1/1 | 1/1 | 1/1 |')"
 echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]
