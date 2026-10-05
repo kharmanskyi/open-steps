@@ -1,1 +1,5 @@
 blank_issues_enabled: true
+contact_links:
+  - name: Report a security problem
+    url: https://github.com/kharmanskyi/open-steps/security/advisories/new
+    about: A way to make the pack's scripts run something, write where they should not, or send data off the machine. Private, not a public issue.
