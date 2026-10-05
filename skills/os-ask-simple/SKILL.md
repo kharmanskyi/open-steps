@@ -3,12 +3,15 @@ name: os-ask-simple
 description: >-
   ALWAYS invoke this skill before asking the user any technical question or
   offering options, and whenever they ask to be asked in plain words - "ask
-  simple", "ask me simply", "ask me in plain words" - or ask if something is
-  worth doing or if something simpler would do, in any language. Rewrites the
-  question in plain words and always ends with one marked recommendation. A
-  structural choice first passes six checks, shown as a table: effort now,
-  simpler substitute, extra work later, lock-in, over-engineering, easy to
-  undo. Doing nothing is always weighed.
+  simple", "ask me simply", "ask me in plain words" - in any language. ALWAYS
+  invoke it too when the user asks for your view on a technical choice:
+  whether it is worth doing, more than the problem needs, or replaceable by
+  something simpler, and which option you would take. Invoke it even when the
+  code makes the answer look obvious: the checks are what make the answer more
+  than a guess. Rewrites the question in plain words and always ends with one
+  marked recommendation. A structural choice first passes six checks, shown as
+  a table: effort now, simpler substitute, extra work later, lock-in,
+  over-engineering, easy to undo. Doing nothing is always weighed.
 allowed-tools:
   - "Read(~/.claude/open-steps/**)"
 ---
