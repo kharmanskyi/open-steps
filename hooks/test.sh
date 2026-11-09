@@ -914,7 +914,7 @@ sound "Cursor wired, once the skills are copied into its own folder"
 dhome; shared
 out="$(doctor)"; code=$?
 sound "a shared copy with no tool this script knows"
-said "^  not checked  The pack's skills are in $H/\.agents/skills, but none of the tools this script knows reads them here: there is no $H/\.codex, $H/\.cursor or $H/\.gemini folder, and no sign of Claude Code\. Another tool that reads that folder may be using the copy\.$"
+said "^  not checked  The pack's skills are in $H/\.agents/skills, but none of the tools this script knows reads them here: there is no $H/\.codex or $H/\.cursor folder, no Gemini CLI settings\.json or GEMINI\.md in $H/\.gemini, and no sign of Claude Code\. Another tool that reads that folder may be using the copy\.$"
 check "the copy no known tool reads is not checked, not faulted" 0 $?
 said '^  ok +All [0-9]+ skills are copied into the shared skills folder'
 check "and the copy itself is still checked" 0 $?
@@ -938,6 +938,33 @@ out="$(doctor)"; code=$?
 sound "a whole copy in the shared folder"
 said '^  ok +All [0-9]+ skills are copied into the shared skills folder, with sound headers and the folders they need\.$'
 check "and the ok line says what was looked at" 0 $?
+# 8. Antigravity keeps config/ and antigravity-cli/ under ~/.gemini, and its CLI
+# reads ~/.gemini/skills. None of that is Gemini CLI. Gemini CLI is found by its
+# own files, settings.json or GEMINI.md, so a Codex install beside Antigravity
+# is judged in full and its faults are reported, with exit 9.
+echo "CASE 21  Antigravity's ~/.gemini folders are not Gemini CLI"
+dhome; shared; mkdir -p "$H/.codex"
+out="$(doctor)"; code=$?
+check "Codex-only control home: exit 9" 9 "$code"
+dhome; shared; mkdir -p "$H/.codex" "$H/.gemini/config" "$H/.gemini/antigravity-cli" "$H/.gemini/skills"
+echo '{}' > "$H/.gemini/config/hooks.json"
+out="$(doctor)"; code=$?
+said '^  FAULT +Your Codex instructions file is not there, so the routing block is missing\.'
+check "with Antigravity's folders: the Codex routing block fault is reported" 0 $?
+said '^  FAULT +Codex has no settings file, so its hooks are not set up\.'
+check "with Antigravity's folders: the Codex hooks fault is reported" 0 $?
+check "with Antigravity's folders: exit 9, as without them" 9 "$code"
+said 'Gemini CLI was not found: there is no settings\.json or GEMINI\.md in'
+check "with Antigravity's folders: Gemini CLI is not found" 0 $?
+# A real Gemini CLI home is still found, with either of its own files.
+dhome; shared; mkdir -p "$H/.codex" "$H/.gemini"; echo '# g' > "$H/.gemini/GEMINI.md"
+out="$(doctor)"; code=$?
+said 'Gemini CLI was not found'
+check "a GEMINI.md alone makes Gemini CLI present" 1 $?
+dhome; shared; wire_gemini; mkdir -p "$H/.gemini/config" "$H/.gemini/antigravity-cli"
+out="$(doctor)"; code=$?
+sound "a Gemini CLI home with Antigravity's folders beside it"
+
 rm -f "$err"
 
 echo
