@@ -16,20 +16,23 @@
 # pack each one holds. It reads files and changes nothing.
 #   skills folders  ~/.agents/skills, shared by Codex, Cursor and Gemini CLI,
 #                and each tool's own: ~/.codex/skills, ~/.cursor/skills and
-#                ~/.gemini/skills. All four are read, and a copy in any of them
-#                is checked: every skill, each with a sound header, and with
-#                the references and scripts folders its source has. Part of
-#                the pack is a fault. Shortcuts are a fault in a folder Codex
-#                reads (the shared one, ~/.codex/skills) while Codex is judged;
-#                otherwise they are a fact, and what the tool does with them is
-#                "not checked".
+#                ~/.gemini/skills, which Antigravity's CLI reads too. Antigravity
+#                reads none of the shared folder: its own are
+#                ~/.gemini/config/skills (app, IDE and CLI) and
+#                ~/.gemini/antigravity-cli/skills (CLI only). All six are read,
+#                and a copy in any of them is checked: every skill, each with a
+#                sound header, and with the references and scripts folders its
+#                source has. Part of the pack is a fault. Shortcuts are a fault
+#                in a folder Codex reads (the shared one, ~/.codex/skills) while
+#                Codex is judged; otherwise they are a fact, and what the tool
+#                does with them is "not checked".
 #   found for another tool  a copy in a tool's own folder, a copy in the
 #                shared folder while ~/.codex, ~/.cursor or Gemini CLI exists, a
 #                Codex AGENTS.md that mentions the pack or a config.toml that
-#                runs one of its hooks, or a Gemini CLI or Cursor whose routing
-#                block or hooks file names it. A tool set up that way with no
-#                copy of the skills in the shared folder or its own is a fault,
-#                blamed on that tool.
+#                runs one of its hooks, a Gemini CLI or Cursor whose routing
+#                block or hooks file names it, or an Antigravity whose hooks
+#                file names it. A tool set up that way with no copy of the
+#                skills in a folder it reads is a fault, blamed on that tool.
 #   Claude Code  a sign of it is the claude command on the PATH,
 #                ~/.claude.json, or a plugins folder, settings file or
 #                CLAUDE.md in ~/.claude. A bare ~/.claude does not count: the
@@ -62,16 +65,18 @@
 #                ~ is "not checked". With a shared copy that could be for
 #                another tool, and no Codex file that mentions the pack, that
 #                is a fact.
-#   Gemini CLI, Cursor  their routing block and the hook commands they name
-#                are reported as facts. Four things are judged. The path in
-#                front of adapter.sh: the example path from
+#   Gemini CLI, Cursor, Antigravity  their routing block and the hook
+#                commands they name are reported as facts. Four things are
+#                judged. The path in front of adapter.sh: the example path from
 #                docs/other-agents.md, or a path with no file, is a fault; a
 #                path that is not a full path is "not checked". The event each
 #                command sits under: SessionStart and AfterAgent on Gemini CLI,
-#                sessionStart and stop on Cursor. The files adapter.sh needs
-#                beside it. And the runnable mark, when a command runs
-#                adapter.sh directly rather than through a shell. Gemini CLI is
-#                found by files of its own in ~/.gemini (settings.json,
+#                sessionStart and stop on Cursor, SessionStart and Stop on
+#                Antigravity (~/.gemini/config/hooks.json). The files adapter.sh
+#                needs beside it. And the runnable mark, when a command runs
+#                adapter.sh directly rather than through a shell. Antigravity's
+#                routing block lives in each project and is not checked. Gemini
+#                CLI is found by files of its own in ~/.gemini (settings.json,
 #                GEMINI.md, installation_id, its sign-in files, tmp/), never by
 #                the folder alone: Antigravity keeps folders there too.
 #
@@ -321,6 +326,18 @@ gem_here=0
 for f in settings.json GEMINI.md installation_id oauth_creds.json google_accounts.json tmp; do
   [ -e "$gem/$f" ] && gem_here=1
 done
+# Antigravity is found by those folders of its own: config/ for the app, the
+# IDE and the CLI, antigravity-cli/ for the CLI. It does not read the shared
+# skills folder. Its skills go in config/skills, which all three read; its CLI
+# also reads antigravity-cli/skills and ~/.gemini/skills.
+ag="$gem/config"
+agcli="$gem/antigravity-cli"
+ag_here=0
+{ [ -d "$ag" ] || [ -d "$agcli" ]; } && ag_here=1
+ag_own=0
+has_copy "$ag/skills" && ag_own=1
+agcli_own=0
+has_copy "$agcli/skills" && agcli_own=1
 
 # Whether the pack is set up for Codex, Gemini CLI or Cursor is read below,
 # once the installed copy is known: a Codex hook counts only when its path is
@@ -403,6 +420,8 @@ if [ "$gem_here" -eq 1 ]; then
 fi
 cur_wired=0
 [ -r "$cur/hooks.json" ] && grep -Eq 'adapter\.sh[^[:alnum:]]+cursor' "$cur/hooks.json" && cur_wired=1
+ag_wired=0
+[ -r "$ag/hooks.json" ] && grep -Eq 'adapter\.sh[^[:alnum:]]+antigravity' "$ag/hooks.json" && ag_wired=1
 # A copy in the shared folder counts as found for another tool only while a
 # tool that reads that folder is here. With none of them, it is a copy nobody
 # reads, and it must not excuse a Claude Code that is missing the plugin.
@@ -411,7 +430,7 @@ if [ "$shared" -eq 1 ] && { [ -d "$codex" ] || [ -d "$cur" ] || [ "$gem_here" -e
   shared_read=1
 fi
 elsewhere=0
-[ $((shared_read + codex_own + cur_own + gem_own + here + gem_wired + cur_wired)) -gt 0 ] && elsewhere=1
+[ $((shared_read + codex_own + cur_own + gem_own + here + gem_wired + cur_wired + ag_own + agcli_own + ag_wired)) -gt 0 ] && elsewhere=1
 
 # Something of the pack in Claude Code's own files: an installed copy, a
 # registry entry even when its folder is gone, an entry for the plugin in the
@@ -803,7 +822,7 @@ elif [ "$CC" -eq 0 ] && [ "$elsewhere" -eq 0 ]; then
     unknown "The pack's skills are in $sdir, but none of the tools this script knows reads them here: there is no $codex or $cur folder, none of Gemini CLI's own files in $gem, and no sign of Claude Code. Another tool that reads that folder may be using the copy."
     skill_copy "$sdir" "the shared skills folder" 1 "Cursor and Gemini CLI"
   else
-    fault "No copy of the pack was found for any tool. None of its skills are in $sdir, $codex/skills, $cur/skills or $gem/skills, and there is no sign of Claude Code." 1
+    fault "No copy of the pack was found for any tool. None of its skills are in $sdir, $codex/skills, $cur/skills, $gem/skills, $ag/skills or $agcli/skills, and there is no sign of Claude Code." 1
   fi
 elif [ $((shared + codex_own + cur_own + gem_own)) -eq 0 ]; then
   fact "No skills from this pack are in these four folders."
@@ -1200,6 +1219,36 @@ else
   fi
   hooks_fact "$cur/hooks.json" cursor "Cursor" sessionStart stop ""
   unknown "Cursor reads the routing block from AGENTS.md in each project, and can wire hooks per project too. Neither was checked here."
+fi
+
+# Antigravity reads none of the shared skills folder, so a copy there is not
+# one for it: the shared copy above can sit next to an Antigravity with no
+# skills at all. Its app and IDE read config/skills only; its CLI also reads
+# antigravity-cli/skills and ~/.gemini/skills.
+section "Antigravity"
+if [ "$ag_here" -eq 0 ]; then
+  fact "Antigravity was not found: there is no $ag or $agcli folder. There is nothing to check for it."
+else
+  if [ "${#expected[@]}" -eq 0 ]; then
+    unknown "This script could not read the pack's own list of skills, so Antigravity's skills folders were not checked."
+  else
+    [ "$ag_own" -eq 1 ] && skill_copy "$ag/skills" "$ag/skills (read by Antigravity's app, IDE and CLI)" 0 "Antigravity"
+    [ "$agcli_own" -eq 1 ] && skill_copy "$agcli/skills" "$agcli/skills (read by Antigravity's CLI only)" 0 "Antigravity's CLI"
+    if [ $((ag_own + agcli_own + gem_own)) -eq 0 ]; then
+      if [ "$ag_wired" -eq 1 ]; then
+        fault "Antigravity is set up for this pack, but none of its skills are in $ag/skills, $agcli/skills or $gem/skills, so Antigravity has none of them. It does not read the shared skills folder, $sdir." 1
+      else
+        fact "No skills from this pack are in Antigravity's skills folders: $ag/skills, $agcli/skills and $gem/skills."
+      fi
+    elif [ "$ag_own" -eq 0 ]; then
+      fact "Antigravity's app and IDE read skills from $ag/skills only, and the pack is not there. The copy its CLI reads does not reach them."
+    fi
+  fi
+  hooks_fact "$ag/hooks.json" antigravity "Antigravity" SessionStart Stop ""
+  if [ -r "$ag/hooks.json" ] && grep -Eq '"enabled"[[:space:]]*:[[:space:]]*false' "$ag/hooks.json"; then
+    unknown "$ag/hooks.json switches at least one hook off with \"enabled\": false. Whether it is this pack's was not checked."
+  fi
+  unknown "Antigravity reads the routing block from AGENTS.md or GEMINI.md in each project, and can wire hooks and skills per project in .agents/. None of that was checked here."
 fi
 
 # --- the result -----------------------------------------------------------
