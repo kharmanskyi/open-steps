@@ -513,7 +513,7 @@ check "the fact names the tools that could be reading the copy" 0 $?
 dhome; own .gemini; wire_gemini
 out="$(doctor)"; code=$?
 sound "Gemini CLI with the skills in its own folder"
-said "^  ok +The pack's [0-9]+ skills are copied into Gemini CLI's own skills folder"
+said "^  ok +The pack's [0-9]+ skills are copied into $H/\.gemini/skills \(read by Gemini CLI and by Antigravity's CLI\)"
 check "Gemini CLI's own folder: the copy there reads ok" 0 $?
 said '^  fact +No skills from this pack are in the shared skills folder\.$'
 check "Gemini CLI's own folder: it says the shared folder was read and has none" 0 $?
@@ -914,7 +914,7 @@ sound "Cursor wired, once the skills are copied into its own folder"
 dhome; shared
 out="$(doctor)"; code=$?
 sound "a shared copy with no tool this script knows"
-said "^  not checked  The pack's skills are in $H/\.agents/skills, but none of the tools this script knows reads them here: there is no $H/\.codex or $H/\.cursor folder, no Gemini CLI settings\.json or GEMINI\.md in $H/\.gemini, and no sign of Claude Code\. Another tool that reads that folder may be using the copy\.$"
+said "^  not checked  The pack's skills are in $H/\.agents/skills, but none of the tools this script knows reads them here: there is no $H/\.codex or $H/\.cursor folder, none of Gemini CLI's own files in $H/\.gemini, and no sign of Claude Code\. Another tool that reads that folder may be using the copy\.$"
 check "the copy no known tool reads is not checked, not faulted" 0 $?
 said '^  ok +All [0-9]+ skills are copied into the shared skills folder'
 check "and the copy itself is still checked" 0 $?
@@ -938,10 +938,10 @@ out="$(doctor)"; code=$?
 sound "a whole copy in the shared folder"
 said '^  ok +All [0-9]+ skills are copied into the shared skills folder, with sound headers and the folders they need\.$'
 check "and the ok line says what was looked at" 0 $?
-# 8. Antigravity keeps config/ and antigravity-cli/ under ~/.gemini, and its CLI
-# reads ~/.gemini/skills. None of that is Gemini CLI. Gemini CLI is found by its
-# own files, settings.json or GEMINI.md, so a Codex install beside Antigravity
-# is judged in full and its faults are reported, with exit 9.
+# Antigravity keeps config/ and antigravity-cli/ under ~/.gemini, and its CLI
+# reads ~/.gemini/skills. None of that is Gemini CLI. Gemini CLI is found by
+# files of its own there, so a Codex install beside Antigravity is judged in
+# full and its faults are reported, with exit 9.
 echo "CASE 21  Antigravity's ~/.gemini folders are not Gemini CLI"
 dhome; shared; mkdir -p "$H/.codex"
 out="$(doctor)"; code=$?
@@ -954,13 +954,21 @@ check "with Antigravity's folders: the Codex routing block fault is reported" 0 
 said '^  FAULT +Codex has no settings file, so its hooks are not set up\.'
 check "with Antigravity's folders: the Codex hooks fault is reported" 0 $?
 check "with Antigravity's folders: exit 9, as without them" 9 "$code"
-said 'Gemini CLI was not found: there is no settings\.json or GEMINI\.md in'
-check "with Antigravity's folders: Gemini CLI is not found" 0 $?
-# A real Gemini CLI home is still found, with either of its own files.
+said "^  fact +Gemini CLI was not found\. $H/\.gemini holds Antigravity's folders, which are not Gemini CLI"
+check "with Antigravity's folders: Gemini CLI is not found, and what the folder holds is said" 0 $?
+# A real Gemini CLI home is still found, by any file of its own.
 dhome; shared; mkdir -p "$H/.codex" "$H/.gemini"; echo '# g' > "$H/.gemini/GEMINI.md"
 out="$(doctor)"; code=$?
 said 'Gemini CLI was not found'
 check "a GEMINI.md alone makes Gemini CLI present" 1 $?
+# A Gemini CLI run only headless, with an API key, can have no settings.json.
+# Its installation id still says it is here, so the shared copy may be its,
+# and Codex is not judged in full.
+dhome; shared; mkdir -p "$H/.codex" "$H/.gemini"; echo 'id' > "$H/.gemini/installation_id"
+out="$(doctor)"; code=$?
+said '^  fact +Codex shares the copy in the shared skills folder with Gemini CLI'
+check "an installation_id alone makes Gemini CLI present, and Codex shares the copy" 0 $?
+check "and nothing is faulted" 0 "$code"
 dhome; shared; wire_gemini; mkdir -p "$H/.gemini/config" "$H/.gemini/antigravity-cli"
 out="$(doctor)"; code=$?
 sound "a Gemini CLI home with Antigravity's folders beside it"

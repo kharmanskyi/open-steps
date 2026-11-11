@@ -70,7 +70,10 @@
 #                command sits under: SessionStart and AfterAgent on Gemini CLI,
 #                sessionStart and stop on Cursor. The files adapter.sh needs
 #                beside it. And the runnable mark, when a command runs
-#                adapter.sh directly rather than through a shell.
+#                adapter.sh directly rather than through a shell. Gemini CLI is
+#                found by files of its own in ~/.gemini (settings.json,
+#                GEMINI.md, installation_id, its sign-in files, tmp/), never by
+#                the folder alone: Antigravity keeps folders there too.
 #
 # Exit codes. Zero means no fault was found.
 #   1  the skills
@@ -308,11 +311,16 @@ cur_own=0
 has_copy "$cur/skills" && cur_own=1
 gem_own=0
 has_copy "$gem/skills" && gem_own=1
-# Gemini CLI is found by its own files. Antigravity keeps folders under ~/.gemini
-# too (config/ and antigravity-cli/), and its CLI reads ~/.gemini/skills, so
-# none of those says Gemini CLI is here.
+# Gemini CLI is found by files of its own in ~/.gemini: its settings and
+# instructions files, and what it writes as it runs (an installation id, its
+# Google sign-in files, a tmp folder for sessions). A headless run with an API
+# key can leave no settings.json, so that file alone would miss it. Antigravity
+# keeps folders under ~/.gemini too (config/ and antigravity-cli/), and its CLI
+# reads ~/.gemini/skills, so none of those says Gemini CLI is here.
 gem_here=0
-{ [ -e "$gem/settings.json" ] || [ -e "$gem/GEMINI.md" ]; } && gem_here=1
+for f in settings.json GEMINI.md installation_id oauth_creds.json google_accounts.json tmp; do
+  [ -e "$gem/$f" ] && gem_here=1
+done
 
 # Whether the pack is set up for Codex, Gemini CLI or Cursor is read below,
 # once the installed copy is known: a Codex hook counts only when its path is
@@ -792,7 +800,7 @@ elif [ "$CC" -eq 0 ] && [ "$elsewhere" -eq 0 ]; then
   # different case: a tool this script does not know may read that folder, so
   # the copy is checked, and who reads it is not.
   if [ "$shared" -eq 1 ]; then
-    unknown "The pack's skills are in $sdir, but none of the tools this script knows reads them here: there is no $codex or $cur folder, no Gemini CLI settings.json or GEMINI.md in $gem, and no sign of Claude Code. Another tool that reads that folder may be using the copy."
+    unknown "The pack's skills are in $sdir, but none of the tools this script knows reads them here: there is no $codex or $cur folder, none of Gemini CLI's own files in $gem, and no sign of Claude Code. Another tool that reads that folder may be using the copy."
     skill_copy "$sdir" "the shared skills folder" 1 "Cursor and Gemini CLI"
   else
     fault "No copy of the pack was found for any tool. None of its skills are in $sdir, $codex/skills, $cur/skills or $gem/skills, and there is no sign of Claude Code." 1
@@ -807,7 +815,7 @@ else
     [ -d "$cur" ] && readers+=("Cursor")
     [ "$gem_here" -eq 1 ] && readers+=("Gemini CLI")
     if [ "${#readers[@]}" -eq 0 ]; then
-      fact "None of Codex, Cursor or Gemini CLI was found on this machine: there is no $codex or $cur folder, and no Gemini CLI settings.json or GEMINI.md in $gem. No tool this script knows reads the shared copy."
+      fact "None of Codex, Cursor or Gemini CLI was found on this machine: there is no $codex or $cur folder, and none of Gemini CLI's own files in $gem. No tool this script knows reads the shared copy."
     else
       fact "Of the tools that read the shared skills folder, this machine has $(and_list "${readers[@]}")."
     fi
@@ -816,7 +824,7 @@ else
   fi
   [ "$codex_own" -eq 1 ] && skill_copy "$codex/skills" "Codex's own skills folder, $codex/skills" 1 "Cursor"
   [ "$cur_own" -eq 1 ] && skill_copy "$cur/skills" "Cursor's own skills folder, $cur/skills" 0 "Cursor"
-  [ "$gem_own" -eq 1 ] && skill_copy "$gem/skills" "Gemini CLI's own skills folder, $gem/skills" 0 "Gemini CLI"
+  [ "$gem_own" -eq 1 ] && skill_copy "$gem/skills" "$gem/skills (read by Gemini CLI and by Antigravity's CLI)" 0 "Gemini CLI and Antigravity"
 fi
 
 section "Codex"
@@ -837,7 +845,7 @@ elif [ "$codex_judged" -eq 0 ]; then
   codex_other_hooks
 else
   if [ "$codex_judged" -eq 2 ]; then
-    fact "There is no Gemini CLI here or $cur folder, so of the three tools that read the shared skills folder, Codex is the one here. The copy there is taken for a Codex install, and Codex is checked in full."
+    fact "There is no $cur folder and no Gemini CLI here, so of the three tools that read the shared skills folder, Codex is the one here. The copy there is taken for a Codex install, and Codex is checked in full."
   fi
   if [ "$shared" -eq 0 ] && [ "$codex_own" -eq 0 ] && [ "${#expected[@]}" -gt 0 ]; then
     fault "Codex is set up for this pack, but none of its skills are in the shared skills folder or in $codex/skills, so Codex has none of them." 1
@@ -1167,8 +1175,12 @@ hooks_fact() { # $1 hooks file  $2 tool as the adapter names it  $3 the tool's n
 }
 
 section "Gemini CLI"
-if [ "$gem_here" -eq 0 ]; then
-  fact "Gemini CLI was not found: there is no settings.json or GEMINI.md in $gem. There is nothing to check for it."
+if [ "$gem_here" -eq 0 ] && { [ -d "$gem/config" ] || [ -d "$gem/antigravity-cli" ]; }; then
+  fact "Gemini CLI was not found. $gem holds Antigravity's folders, which are not Gemini CLI, and none of Gemini CLI's own files, such as settings.json or GEMINI.md. There is nothing to check for it."
+elif [ "$gem_here" -eq 0 ] && [ -d "$gem" ]; then
+  fact "Gemini CLI was not found. $gem is there, but none of Gemini CLI's own files are in it, such as settings.json or GEMINI.md. There is nothing to check for it."
+elif [ "$gem_here" -eq 0 ]; then
+  fact "Gemini CLI was not found: there is no $gem folder. There is nothing to check for it."
 else
   # Set up for the pack and holding none of its skills, Gemini CLI is the tool
   # to blame, the way Codex is above.
