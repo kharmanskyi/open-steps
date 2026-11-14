@@ -67,9 +67,9 @@ Cursor CLI runners, are worked examples for a tool with no skill tool, and
 
 ## Tests
 
-`bash hooks/test.sh` tests both hooks, the adapter for Cursor and Gemini CLI,
-`doctor.sh` and the scripts the skills ship. It uses throwaway repositories
-and a throwaway home folder, so it touches nothing of yours.
+`bash hooks/test.sh` tests both hooks, the adapter for Cursor, Gemini CLI and
+Antigravity, `doctor.sh` and the scripts the skills ship. It uses throwaway
+repositories and a throwaway home folder, so it touches nothing of yours.
 `bash evals/test.sh` tests the scorer and the runners. It uses stand-ins for
 `claude`, `codex` and `gemini`, and a recorded Cursor CLI stream, so no model
 is called. Neither needs Claude Code. To run

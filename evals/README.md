@@ -222,6 +222,7 @@ The numbers in brackets point to the notes under the table.
 | Codex CLI | watched (5) | from docs, in place (6) | checked by hand (7) | checked by hand (7) | measured: right skill read in 75 of 75, first in 70 (8) | did not start on 0.151 (9) |
 | Cursor CLI | watched (10) | from docs; in the measured runs the test script put it in the project's `AGENTS.md` (12) | watched (10) | watched: asks, cannot require (10, 11) | measured in part: right skill read in 12 of the 12 runs that got an answer (12) | not tried |
 | Gemini CLI | watched (10) | in place (10, 13) | watched (10) | watched: can refuse (10, 14) | measured: right skill called in 54 of 75, the other 21 reached for it by reading its file (15) | not tried |
+| Antigravity | watched, in a project's `.agents/skills/` and in `~/.gemini/config/skills/` (16) | watched, in a project's `AGENTS.md` (16) | watched (16) | watched: can refuse (16, 17) | not measured | not tried |
 
 1. Installed as a plugin from a clean, empty account, with both hooks
    connected. `claude plugin validate --strict` passes.
@@ -283,6 +284,20 @@ The numbers in brackets point to the notes under the table.
     register the skill tool, so no skill's text reached the model in any run.
     One contributor's runs, scored by the maintainer. See
     [On Gemini CLI](#on-gemini-cli).
+16. 2026-11-11, Antigravity CLI (`agy`) 1.5.5 on macOS 15, model
+    gemini-3.8-flash-high, headless. The skills, the routing block and the
+    hooks were all in a throwaway project: `.agents/skills/`, `AGENTS.md` and
+    `.agents/hooks.json`. Later the same day, headless runs with the pack in
+    `~/.gemini/config/skills/` and `~/.gemini/config/hooks.json` read the
+    skills from there and got the handover from the session-start hook. The
+    stop hook from that file, the app and the IDE are from docs. One
+    contributor's runs. See
+    [Runs on Antigravity](../docs/other-agents.md#runs-on-antigravity).
+17. On Antigravity the stop hook can refuse, on `Stop`, with
+    `decision: "continue"`. The reason reached the agent as a system message,
+    the agent wrote the report with its shell tool, and the next `Stop` let
+    the session end. The adapter asks only on a normal finish,
+    `terminationReason` `NO_TOOL_CALL`.
 
 The description of `os-ask-simple` changed on 2026-10-05, after the Codex CLI,
 Cursor CLI and Gemini CLI runs above: see

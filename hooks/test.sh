@@ -199,6 +199,67 @@ case "$out" in
   *) check "without session_id in the payload, GEMINI_SESSION_ID finds the same baseline" 0 1 ;;
 esac
 
+echo "CASE 22  Antigravity: JSON both ways, and a stop that asks only on a normal finish"
+# The payloads are the shapes agy 1.5.5 sent in a real session. Antigravity
+# keys every event on conversationId and runs the hook in the folder that holds
+# hooks.json, not in the project, so the adapter goes to the payload's cwd,
+# else the first of workspacePaths. The handover goes out as an injectSteps
+# systemMessage. The stop asks with decision "continue" only on a normal
+# finish: NO_TOOL_CALL, or model_stop as the published hooks page names it.
+# ERROR, USER_CANCELED and the rest are left alone. The stop after the ask finds
+# nothing new and answers {}: no loop.
+H="$(mktemp -d)"; newrepo
+agy_hook() { (cd "$H" && printf '%s' "$1" | HOME="$H" bash "$PACK/hooks/adapter.sh" antigravity "$2" 2>/dev/null); }
+agy_payload() { # $1 conversationId  $2 event  $3 extra fields
+  printf '{"artifactDirectoryPath":"%s/brain/%s","conversationId":"%s","cwd":"%s","hookEventName":"%s","lastUserInput":"append a line","modelName":"gemini-3.8-flash-high","transcriptPath":"%s/brain/%s/transcript_full.jsonl","workspacePaths":["%s"]%s}' \
+    "$H" "$1" "$1" "$PWD" "$2" "$H" "$1" "$PWD" "$3"
+}
+agy_stop() { agy_payload "$1" Stop ",\"error\":\"\",\"executionNum\":$2,\"fullyIdle\":true,\"terminationReason\":\"$3\""; }
+out="$(agy_hook "$(agy_payload A22 SessionStart "")" session-start)"
+case "$out" in
+  '{"injectSteps":[{"systemMessage":{"systemMessage":"'*"<session-handover>"*os-done-or-not*'"}}]}') check "the handover arrives as an injectSteps systemMessage" 0 0 ;;
+  *) check "the handover arrives as an injectSteps systemMessage" 0 1 ;;
+esac
+[ "$(printf '%s' "$out" | wc -l | tr -d ' ')" = "0" ]; check "on one line, newlines escaped" 0 $?
+grep -q '^OS_STATE_SESSION=A22$' "$H/.claude/open-steps/reports/$(basename "$PWD")/.stop-state"
+check "the baseline is keyed on conversationId, taken in the project, not where the hook runs" 0 $?
+out="$(agy_hook "$(agy_stop A22 0 NO_TOOL_CALL)" stop)"
+[ "$out" = "{}" ]; check "nothing landed, a normal finish is let through" 0 $?
+echo change >> a.txt
+out="$(agy_hook "$(agy_stop A22 1 ERROR)" stop)"
+[ "$out" = "{}" ]; check "an ERROR stop is left alone" 0 $?
+out="$(agy_hook "$(agy_stop A22 1 USER_CANCELED)" stop)"
+[ "$out" = "{}" ]; check "a USER_CANCELED stop is left alone" 0 $?
+out="$(agy_hook "$(agy_stop A22 1 NO_TOOL_CALL)" stop)"
+code=$?
+case "$out" in
+  '{"decision":"continue","reason":"Work landed'*os-done-or-not*'"}') check "NO_TOOL_CALL with work landed asks with decision continue" 0 0 ;;
+  *) check "NO_TOOL_CALL with work landed asks with decision continue" 0 1 ;;
+esac
+check "with exit 0" 0 $code
+py=""
+for cand in python3 python; do
+  command -v "$cand" >/dev/null 2>&1 && "$cand" -c 'import json' >/dev/null 2>&1 && { py="$cand"; break; }
+done
+if [ -n "$py" ]; then
+  printf '%s' "$out" | "$py" -c 'import json, sys; json.load(sys.stdin)' 2>/dev/null
+  check "and it parses as JSON" 0 $?
+fi
+out="$(agy_hook "$(agy_stop A22 2 NO_TOOL_CALL)" stop)"
+[ "$out" = "{}" ]; check "the stop after the ask is silent, no loop" 0 $?
+echo more >> a.txt
+out="$(OPEN_STEPS_COOLDOWN=0 agy_hook "$(agy_stop A22 3 model_stop)" stop)"
+case "$out" in
+  '{"decision":"continue","reason":"Work landed'*'"}') check "model_stop, the published name, asks too" 0 0 ;;
+  *) check "model_stop, the published name, asks too" 0 1 ;;
+esac
+# Without cwd the project comes from workspacePaths. Taken anywhere else, the
+# baseline would not match the project and this stop would ask.
+nocwd="$(agy_payload A22b SessionStart "" | sed 's/"cwd":"[^"]*",//')"
+agy_hook "$nocwd" session-start >/dev/null
+out="$(OPEN_STEPS_COOLDOWN=0 agy_hook "$(agy_stop A22b 0 NO_TOOL_CALL)" stop)"
+[ "$out" = "{}" ]; check "without cwd, workspacePaths finds the project" 0 $?
+
 echo "CASE 12  the map this pack writes into the project"
 # os-big-picture writes BIG-PICTURE.md inside the repository, unlike reports. If
 # the fingerprint counted it, the agent would be asked for a report about the
@@ -402,6 +463,11 @@ wire_claude() {
     "$PACK" > "$H/.claude/plugins/installed_plugins.json"
   printf '{"enabledPlugins":{"open-steps@open-steps":true}}\n' > "$H/.claude/settings.json"
   cat "$PACK/docs/routing-block.md" > "$H/.claude/CLAUDE.md"
+}
+wire_antigravity() { # $1 the adapter path the hooks file names  $2 the event for the stop, Stop unless given
+  mkdir -p "$H/.gemini/config"
+  printf '{"open-steps":{"SessionStart":[{"type":"command","command":"bash %s antigravity session-start","timeout":30}],"%s":[{"type":"command","command":"bash %s antigravity stop","timeout":30}]}}\n' \
+    "$1" "${2:-Stop}" "$1" > "$H/.gemini/config/hooks.json"
 }
 fake_claude() { printf '#!/bin/sh\nexit 0\n' > "$H/bin/claude" && chmod +x "$H/bin/claude"; }
 
@@ -972,6 +1038,54 @@ check "and nothing is faulted" 0 "$code"
 dhome; shared; wire_gemini; mkdir -p "$H/.gemini/config" "$H/.gemini/antigravity-cli"
 out="$(doctor)"; code=$?
 sound "a Gemini CLI home with Antigravity's folders beside it"
+
+# 9. Antigravity reads none of the shared skills folder. Its skills go in
+# ~/.gemini/config/skills (app, IDE and CLI) or ~/.gemini/antigravity-cli/skills
+# (CLI only), and its hooks in ~/.gemini/config/hooks.json under SessionStart
+# and Stop. Two-sided: each wrong setup reads as a fault, a right one as sound.
+echo "CASE 23  the doctor on Antigravity"
+dhome; own .gemini/config; wire_antigravity "$PACK/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+sound "Antigravity only"
+said "^  ok +The pack's [0-9]+ skills are copied into $H/\.gemini/config/skills \(read by Antigravity's app, IDE and CLI\)"
+check "Antigravity only: its skills folder reads ok" 0 $?
+said "^  ok +Each hook command in $H/\.gemini/config/hooks\.json sits under the event it needs: adapter\.sh antigravity session-start under SessionStart, adapter\.sh antigravity stop under Stop\.$"
+check "Antigravity only: both hook commands sit under the events they need" 0 $?
+said '^  ok +The files adapter\.sh needs are beside it'
+check "Antigravity only: the adapter's own files were looked up" 0 $?
+said 'Gemini CLI was not found'
+check "Antigravity only: its folders are not taken for Gemini CLI" 0 $?
+said '^  not checked  Antigravity reads the routing block from AGENTS\.md or GEMINI\.md in each project'
+check "Antigravity only: the per-project routing block reads not checked" 0 $?
+# A copy in the shared folder is not one for Antigravity.
+dhome; shared; wire_antigravity "$PACK/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+said '^  FAULT +Antigravity is set up for this pack, but none of its skills are in .*It does not read the shared skills folder'
+check "Antigravity wired with only a shared copy: the fault names Antigravity" 0 $?
+check "and the exit code names the skills" 1 "$code"
+# The CLI-only folder reaches the CLI, and that is said, not faulted.
+dhome; own .gemini/antigravity-cli; wire_antigravity "$PACK/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+sound "Antigravity with the skills in its CLI-only folder"
+said "^  fact +Antigravity's app and IDE read skills from $H/\.gemini/config/skills only"
+check "the CLI-only copy: the app and IDE gap is a fact" 0 $?
+# The stop under another event never asks for a report.
+dhome; own .gemini/config; wire_antigravity "$PACK/hooks/adapter.sh" PostInvocation
+out="$(doctor)"; code=$?
+said "^  FAULT +$H/\.gemini/config/hooks\.json puts adapter\.sh antigravity stop under the PostInvocation event, not under Stop\. A report is never asked for from there\.$"
+check "the stop under the wrong event is a fault" 0 $?
+check "and the exit code names the hooks" 3 "$code"
+# The example path from the documentation, pasted unchanged.
+dhome; own .gemini/config; wire_antigravity "/path/to/open-steps/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+said "^  FAULT +$H/\.gemini/config/hooks\.json still holds the example path for adapter\.sh antigravity"
+check "the example path is a fault" 0 $?
+# A hook switched off is said, since the file alone cannot tell whose it is.
+dhome; own .gemini/config; wire_antigravity "$PACK/hooks/adapter.sh"
+sed 's/"open-steps":{/"open-steps":{"enabled":false,/' "$H/.gemini/config/hooks.json" > "$H/hj" && mv "$H/hj" "$H/.gemini/config/hooks.json"
+out="$(doctor)"; code=$?
+said '^  not checked  .*hooks\.json switches at least one hook off with "enabled": false'
+check "a hook switched off reads not checked" 0 $?
 
 rm -f "$err"
 
