@@ -7,6 +7,8 @@
 #   adapter.sh cursor stop              asks for the report as followup_message
 #   adapter.sh gemini session-start     wraps the handover as additionalContext
 #   adapter.sh gemini stop              refuses the turn: decision deny, reason
+#   adapter.sh antigravity session-start  hands the handover in as injectSteps
+#   adapter.sh antigravity stop         refuses the stop: decision continue, reason
 #
 # Cursor's contract, the parts that matter here:
 # - Both events must answer with JSON; anything else counts as a hook failure.
@@ -37,6 +39,26 @@
 #   is outside it, while its shell tool is not limited. The reason says so,
 #   or the report lands in Gemini's temp folder where no session reads it.
 #
+# Antigravity's contract, the parts that matter here (the hook reference the
+# CLI carries, read in agy 1.5.5):
+# - JSON on stdout, and nothing else. Keys are camelCase.
+# - Every event carries conversationId, not session_id. The hook runs in the
+#   folder that holds hooks.json, not in the project, so the project comes from
+#   the payload: cwd, where the agent's commands run, else the first of
+#   workspacePaths.
+# - SessionStart answers with injectSteps. A systemMessage step reaches the
+#   model as a system message, which is where the handover goes.
+# - Stop fires whenever the loop ends, and terminationReason says why. A normal
+#   finish is NO_TOOL_CALL; its published hooks page names it model_stop, a value
+#   the CLI's own enum does not have. Either is asked for a report. Every other
+#   reason (ERROR, USER_CANCELED, MAX_INVOCATIONS and the rest), or none, is
+#   left alone, the way the Cursor mode leaves an aborted stop alone.
+# - Stop takes decision "continue" with a reason: the stop is blocked, the
+#   reason goes in as a system message, and the loop runs again. That is what
+#   exit 2 with stderr does elsewhere. The stop after it is not refused by this
+#   adapter: stop-report.sh records the change when it asks, so that stop finds
+#   nothing new and answers {}.
+#
 # The settings and kill switches of the two scripts apply unchanged, because
 # the scripts read them, not this adapter.
 
@@ -47,11 +69,11 @@ tool="${1:-}"
 event="${2:-}"
 
 usage() {
-  printf 'usage: adapter.sh cursor|gemini session-start|stop\n' >&2
+  printf 'usage: adapter.sh cursor|gemini|antigravity session-start|stop\n' >&2
   exit 1
 }
 
-case "$tool" in cursor|gemini) ;; *) usage ;; esac
+case "$tool" in cursor|gemini|antigravity) ;; *) usage ;; esac
 case "$event" in session-start|stop) ;; *) usage ;; esac
 
 payload="$(cat 2>/dev/null || true)"
@@ -87,12 +109,22 @@ json_string() { # $1 = text
   printf '"%s"' "$s"
 }
 
+# The first string of a JSON array field, such as workspacePaths.
+first_in() { # $1 = key
+  printf '%s' "$payload" \
+    | tr -d '\n' \
+    | grep -oE "\"$1\"[[:space:]]*:[[:space:]]*\[[[:space:]]*\"[^\"]+\"" \
+    | head -1 | sed -E 's/.*\[[[:space:]]*"([^"]+)"$/\1/'
+}
+
 # The hooks look for the repository from the working directory. Each tool
 # names the project on every hook, Cursor in CURSOR_PROJECT_DIR, Gemini CLI in
-# GEMINI_PROJECT_DIR and in the payload's cwd; follow it when it is there.
+# GEMINI_PROJECT_DIR and in the payload's cwd, Antigravity in the payload's cwd
+# and workspacePaths; follow it when it is there.
 case "$tool" in
   cursor) dir="${CURSOR_PROJECT_DIR:-}" ;;
   gemini) dir="${GEMINI_PROJECT_DIR:-}"; [ -n "$dir" ] || dir="$(field cwd)" ;;
+  antigravity) dir="$(field cwd)"; [ -n "$dir" ] || dir="$(first_in workspacePaths)" ;;
 esac
 [ -n "$dir" ] && cd "$dir" 2>/dev/null || true
 
@@ -103,6 +135,7 @@ esac
 case "$tool" in
   cursor) id="$(field conversation_id)"; [ -n "$id" ] || id="$(field session_id)" ;;
   gemini) id="$(field session_id)"; [ -n "$id" ] || id="${GEMINI_SESSION_ID:-}" ;;
+  antigravity) id="$(field conversationId)"; [ -n "$id" ] || id="$(field session_id)" ;;
 esac
 inner="$(printf '{"session_id":"%s"}' "$id")"
 
@@ -113,6 +146,8 @@ case "$event" in
       printf '{}\n'
     elif [ "$tool" = "cursor" ]; then
       printf '{"additional_context":%s}\n' "$(json_string "$out")"
+    elif [ "$tool" = "antigravity" ]; then
+      printf '{"injectSteps":[{"systemMessage":{"systemMessage":%s}}]}\n' "$(json_string "$out")"
     else
       printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":%s}}\n' "$(json_string "$out")"
     fi
@@ -125,13 +160,19 @@ case "$event" in
         exit 0
       fi
     fi
+    if [ "$tool" = "antigravity" ]; then
+      case "$(field terminationReason)" in
+        NO_TOOL_CALL|model_stop) ;;
+        *) printf '{}\n'; exit 0 ;;
+      esac
+    fi
     if [ "$tool" = "gemini" ] && flag stop_hook_active; then
       printf '{}\n'
       exit 0
     fi
     err="$(printf '%s' "$inner" | bash "$HERE/stop-report.sh" 2>&1 >/dev/null)"
     code=$?
-    # Both tools hand this text to the agent as its next prompt, Cursor as the
+    # Every tool hands this text to the agent as its next prompt, Cursor as the
     # person's own message, so only the report request goes through: anything
     # bash printed before it (a bad state file, say) stays out. The request
     # starts with "Work landed".
@@ -141,6 +182,8 @@ case "$event" in
       printf '{}\n'
     elif [ "$tool" = "cursor" ]; then
       printf '{"followup_message":%s}\n' "$(json_string "$ask")"
+    elif [ "$tool" = "antigravity" ]; then
+      printf '{"decision":"continue","reason":%s}\n' "$(json_string "$ask")"
     else
       ask="$ask
 Save it with the shell tool: the reports folder is outside the workspace, and write_file refuses it."

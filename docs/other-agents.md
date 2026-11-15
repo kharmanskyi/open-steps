@@ -1,14 +1,16 @@
-# Open Steps on Codex CLI, Cursor CLI and Gemini CLI
+# Open Steps on Codex CLI, Cursor CLI, Gemini CLI and Antigravity
 
-This guide sets up Open Steps on Codex CLI, Cursor CLI and Gemini CLI. The
-skills, the routing block and the two hooks are the same on every tool; only
-the wiring differs. Setup has four parts:
+This guide sets up Open Steps on Codex CLI, Cursor CLI, Gemini CLI and
+Antigravity. The skills, the routing block and the two hooks are the same on
+every tool; only the wiring differs. Setup has four parts:
 
-1. Copy the skills into one shared folder. One command covers all three tools.
+1. Copy the skills. One command covers Codex, Cursor and Gemini CLI, which
+   share one folder. Antigravity reads a folder of its own and takes its own
+   command.
 2. Add the routing block to each tool's instructions file.
 3. Wire the two hooks in each tool's settings. On Codex CLI the hook scripts
-   are wired as they are. On Cursor CLI and Gemini CLI they run through one
-   adapter, `hooks/adapter.sh`.
+   are wired as they are. On Cursor CLI, Gemini CLI and Antigravity they run
+   through one adapter, `hooks/adapter.sh`.
 4. Check the install with `doctor.sh`.
 
 What was run on each tool is summed up in the evals README, in
@@ -18,7 +20,8 @@ Where a step comes from a tool's documentation and was not run, this page says
 so next to the step.
 
 On this page, Codex means Codex CLI and Cursor means Cursor CLI. The Cursor
-desktop app is named when it is meant.
+desktop app is named when it is meant. Antigravity means its CLI, `agy`, unless
+its app or IDE is named.
 
 ## Before you start
 
@@ -52,6 +55,21 @@ Cursor also reads `~/.claude/skills/` and `~/.codex/skills/`, behind a setting
 named under [Cursor CLI](#cursor-cli). These per-tool paths come from each
 tool's documentation. The shared folder is the one that was run.
 
+Antigravity reads none of the shared folder, so the command above does not
+reach it. It reads `.agents/skills/` in a project and, for your user,
+`~/.gemini/config/skills/`, which its app, its IDE and its CLI all read. Its
+CLI also reads `~/.gemini/antigravity-cli/skills/` and `~/.gemini/skills/`.
+For your user:
+
+```bash
+mkdir -p ~/.gemini/config/skills && cp -R open-steps/skills/os-* ~/.gemini/config/skills/
+```
+
+These folders come from Antigravity's documentation. The project folder,
+`.agents/skills/`, and `~/.gemini/config/skills/` are the ones that were run,
+as [Runs on Antigravity](#runs-on-antigravity) says. To update, run `git pull`
+inside `open-steps/`, then the copy command again.
+
 One skill leans on two Claude Code features: a `!` line that loads its
 prompt, and a fresh agent that runs the review. The skill is
 `os-what-could-go-wrong`. When the `!` line does not run, the skill reads the
@@ -59,7 +77,8 @@ same prompt from `references/premortem-prompt.md`, and on Codex CLI 0.151
 that is what happened. In the same four runs no fresh agent started. The agent
 ran the review itself, so that review was not independent. The skill has
 changed since those runs, and they have not been re-run. On Codex CLI 0.157.1
-this is not measured, and on Cursor CLI and Gemini CLI it was not tried.
+this is not measured, and on Cursor CLI, Gemini CLI and Antigravity it was not
+tried.
 
 ## The routing block
 
@@ -77,12 +96,18 @@ One command per tool. Each is safe to re-run:
 | Codex CLI | `~/.codex/AGENTS.md` | `mkdir -p ~/.codex && grep -q 'os-done-or-not' ~/.codex/AGENTS.md 2>/dev/null \|\| cat open-steps/docs/routing-block.md >> ~/.codex/AGENTS.md` |
 | Cursor CLI | `AGENTS.md` in the project root | `grep -q 'os-done-or-not' AGENTS.md 2>/dev/null \|\| cat open-steps/docs/routing-block.md >> AGENTS.md` |
 | Gemini CLI | `~/.gemini/GEMINI.md` | `mkdir -p ~/.gemini && grep -q 'os-done-or-not' ~/.gemini/GEMINI.md 2>/dev/null \|\| cat open-steps/docs/routing-block.md >> ~/.gemini/GEMINI.md` |
+| Antigravity | `AGENTS.md` in the project root | `grep -q 'os-done-or-not' AGENTS.md 2>/dev/null \|\| cat open-steps/docs/routing-block.md >> AGENTS.md` |
 
 Cursor's file is per project, because Cursor has no global `AGENTS.md`. Run
 its command in the project root, with the path to your clone in place of
 `open-steps/`. Per Cursor's documentation, it reads `AGENTS.md` in the project
 root and in subdirectories. It keeps preferences for all projects in User
 Rules, which is a settings screen, not a file a command can add to.
+
+Antigravity's file is per project too, run the same way. Per its
+documentation it reads `AGENTS.md` and `GEMINI.md` in a project, and a project
+`AGENTS.md` was seen reaching the model. Where it keeps a file for all
+projects was not checked.
 
 ## The hooks
 
@@ -95,6 +120,7 @@ tools differ in what they do with the answer:
 | Codex CLI | hands the handover to the model, per Codex's documentation | refuses with exit code 2 once the hooks are trusted, per Codex's documentation | `~/.codex/config.toml`, scripts unchanged |
 | Cursor CLI | hands the handover to the model, through the adapter | asks with a follow-up message, cannot require the report | `~/.cursor/hooks.json`, through the adapter |
 | Gemini CLI | hands the handover to the model, through the adapter | refuses on `AfterAgent`, through the adapter | `~/.gemini/settings.json`, through the adapter |
+| Antigravity | hands the handover to the model, through the adapter | refuses on `Stop` with `decision: "continue"`, through the adapter | `~/.gemini/config/hooks.json` or a project's `.agents/hooks.json`, through the adapter |
 
 Whether each cell was watched, checked by hand or read in the documentation is
 in the evals README table,
@@ -344,6 +370,109 @@ on both events.
 - **On Windows, check the `$input |` in front of the command.** Without it,
   the hook gets no payload.
 
+### Antigravity
+
+#### Wiring
+
+Hooks live in `hooks.json`: `~/.gemini/config/hooks.json` for your user, or
+`.agents/hooks.json` in a project. Per Antigravity's documentation its app,
+its IDE and its CLI read the same two files. Each top-level key is a hook
+name, and under it each event holds a list of commands. Hooks read JSON on
+standard input and answer with JSON on standard output, and every key in the
+payload is camelCase. A hook runs through `sh -c` in the folder that holds
+`hooks.json`, not in the project.
+
+`SessionStart` fires once, before the first model call, and takes
+`injectSteps`. A `systemMessage` step there reaches the model as a system
+message. `Stop` fires whenever the agent loop ends, says why in
+`terminationReason`, and takes `decision: "continue"` with a `reason`. The
+stop is then blocked, the reason goes in as a system message, and the loop
+runs again. That matches the pack's exit code 2 with the request as the
+reason, so on Antigravity the stop can refuse.
+
+`hooks/adapter.sh` does the translation, the same script Cursor and Gemini CLI
+use:
+
+```bash
+hooks/adapter.sh antigravity session-start   # {"injectSteps":[{"systemMessage":{"systemMessage":...}}]}
+hooks/adapter.sh antigravity stop            # {"decision":"continue","reason":...} when work landed, {} otherwise
+```
+
+The adapter does three more things. Each one follows from how Antigravity
+works:
+
+- **Both events are matched by `conversationId`.** Antigravity sends no
+  `session_id`. `conversationId` is on every event, so both hooks find the
+  same snapshot.
+- **Only a normal finish is asked for a report.** A normal finish is
+  `terminationReason` `NO_TOOL_CALL`: the model answered without calling a
+  tool. The published hooks page gives `model_stop` as its example, but the
+  hook reference the CLI carries lists `NO_TOOL_CALL`, and that is what the run
+  sent. The adapter takes either one. Every other reason, such as `ERROR`,
+  `USER_CANCELED` or `MAX_INVOCATIONS`, gets `{}`, and the change waits for the
+  next normal finish.
+- **The working folder is the payload's `cwd`,** where the agent's commands
+  run, and the first of `workspacePaths` when there is no `cwd`. The hook
+  itself starts in the folder that holds `hooks.json`, so the scripts would
+  otherwise look for the repository in the wrong place.
+
+Wire it in `~/.gemini/config/hooks.json`, or in `.agents/hooks.json` in a
+project, with the path to your clone. If the file already holds other hooks,
+add `"open-steps"` as one more top-level key:
+
+```json
+{
+  "open-steps": {
+    "SessionStart": [
+      { "type": "command", "command": "bash /absolute/path/to/open-steps/hooks/adapter.sh antigravity session-start", "timeout": 30 }
+    ],
+    "Stop": [
+      { "type": "command", "command": "bash /absolute/path/to/open-steps/hooks/adapter.sh antigravity stop", "timeout": 30 }
+    ]
+  }
+}
+```
+
+The `timeout` is in seconds, and 30 is the default. The run used the project
+file, with the same two entries. The activation runs the same day used
+`~/.gemini/config/hooks.json`, and its session-start hook ran from there.
+
+#### Limits
+
+- **The stop after the request is let through.** Antigravity has no flag like
+  Gemini CLI's `stop_hook_active`. The stop script records the change when it
+  asks, so the next `Stop` finds nothing new, and the adapter answers `{}`.
+  If the agent changes the repository again while it writes the report, the
+  cooldown (`OPEN_STEPS_COOLDOWN`, 15 minutes by default) keeps it to one
+  request. Per its hook reference, Antigravity also caps forced
+  continuations, and a stop at that cap (`MAX_FORCED_INVOCATIONS`) is left
+  alone like every other reason.
+- **A headless run needs permission rules.** In print mode (`agy -p`) nobody
+  can answer a permission prompt, so a tool that needs one is denied. The run
+  passed the rules for that run only, with `--settings`, as shown under
+  [Runs on Antigravity](#runs-on-antigravity). A rule in the project's
+  `.agents/settings.json` was not picked up. In an interactive session you
+  answer the prompts as they come.
+- **The report was saved with the shell tool.** The reports folder,
+  `~/.claude/open-steps/reports/`, is outside the project. In the run the agent
+  chose its shell tool to write there without being told, so the request
+  carries no extra sentence, unlike on Gemini CLI. Whether Antigravity's file
+  tool refuses that folder was not tried.
+
+#### If nothing happens
+
+- **Read the transcript.** Every payload names its `transcriptPath`. For the
+  CLI that is under
+  `~/.gemini/antigravity-cli/brain/<conversationId>/.system_generated/logs/`.
+  The handover shows there as a system message that says it was injected by a
+  `SessionStart` hook, and the report request as a system message after the
+  last answer.
+- **Check that the pack's entry is switched on.** A hook name with
+  `"enabled": false` under it never runs. `doctor.sh` says when the file has
+  one.
+- **List the hooks Antigravity loaded** with `/hooks` in an interactive `agy`
+  session (from its documentation, not run).
+
 ## Check the install
 
 From the folder that holds the clone, run:
@@ -376,6 +505,14 @@ It reads files and changes nothing. Each line is marked `ok`, `FAULT`,
   directly, and the two hook scripts are beside it. A tool wired for the pack
   with no copy of the skills is a fault that names that tool. It does not
   check Cursor's `AGENTS.md`, since that one sits in each project.
+- **Antigravity:** it finds Antigravity by `~/.gemini/config/` or
+  `~/.gemini/antigravity-cli/`, and never takes those folders for Gemini CLI.
+  It checks a copy in `~/.gemini/config/skills/` and in the CLI's own folders.
+  An Antigravity wired for the pack with no copy in any of them is a fault,
+  even with a copy in the shared folder, which it does not read. It judges
+  `~/.gemini/config/hooks.json` the way it judges Cursor's file, with the
+  commands under `SessionStart` and `Stop`. It does not check a project's
+  `.agents/` files or `AGENTS.md`.
 
 To update or remove the pack, see
 [Codex CLI, Cursor CLI and Gemini CLI](../README.md#codex-cli-cursor-cli-and-gemini-cli)
@@ -386,7 +523,8 @@ in the README.
 This part is the record behind the README table. The Cursor CLI and Gemini CLI
 runs are one contributor's, on Windows 11, and the maintainer has not
 reproduced them. The Codex CLI listing, premortem runs and activation runs
-were contributors' runs too.
+were contributors' runs too. The Antigravity runs are one contributor's, on
+macOS, and have not been reproduced either.
 
 ### Runs on Codex CLI
 
@@ -514,9 +652,72 @@ evals, [On Gemini CLI](../evals/README.md#on-gemini-cli).
 Not run: Gemini CLI on macOS or Linux, the project-level settings file, and
 Google sign-in.
 
+### Runs on Antigravity
+
+On Antigravity CLI (`agy`) 1.5.5 on macOS 15 (Apple silicon), on 2026-11-11,
+signed in with a Google account, model gemini-3.8-flash-high. A throwaway
+repository held the skills in `.agents/skills/`, the routing block in
+`AGENTS.md`, and the adapter wired in `.agents/hooks.json`. Each command went
+through a small wrapper that kept a copy of the payload and of the adapter's
+answer, and ran the adapter unchanged. The run was headless:
+
+```bash
+agy --settings '{"permissions":{"allow":["command(*)","write_file(*)","edit_file(*)"]}}' \
+  -p "Append the line hello to a.txt." --output-format json
+```
+
+The copies and the transcript show, in order:
+
+1. `SessionStart` fired. The adapter answered with the handover. The second
+   step of the transcript is a system message that opens "The following
+   system message was injected by a SessionStart hook", with the routing table
+   and "No previous report for this project."
+2. The agent appended the line. `Stop` fired with `terminationReason`
+   `NO_TOOL_CALL` and `executionNum` 0. The adapter answered
+   `{"decision":"continue","reason":"Work landed during this session (changed: os-agy-live). ..."}`.
+3. The reason arrived as a system message. The agent read
+   `.agents/skills/os-done-or-not/SKILL.md`, looked at the git state, and wrote
+   `latest.md` in the reports folder with its shell tool. Its final answer was
+   the report: a lead, a checkmark table and the verdict rows.
+4. `Stop` fired again, `NO_TOOL_CALL`, `executionNum` 1. The adapter answered
+   `{}`, and the run ended with status `SUCCESS`. One request, no loop.
+
+The attempts before it went differently. In the first three, print mode
+denied a tool, so the line was never written: the shell tool twice, the
+second time with a rule in the project's `.agents/settings.json`, and then the
+file tool, once a per-run `--settings` rule let the shell through. In the
+fourth, the adapter still asked only on `model_stop`, the value the published
+hooks page gives. The stop came with `NO_TOOL_CALL`, the adapter answered
+`{}`, and no report was asked for. That run is why the adapter takes
+`NO_TOOL_CALL`. The hook reference the CLI carries lists every reason it can
+send.
+
+A second throwaway project, with no hooks, held only an `AGENTS.md` with a
+code word in it. Asked for the word with no tools, the agent gave it. So a
+project `AGENTS.md` reaches the model.
+
+Later the same day, 84 headless runs for the eval runner,
+`evals/agents/antigravity.sh`, had the pack installed for the user: the
+skills in `~/.gemini/config/skills/` and both hooks in
+`~/.gemini/config/hooks.json`. Each skill the agent opened was read from that
+folder with `read_file`, and the read went through. Each transcript opens with
+the handover as a system message injected by a `SessionStart` hook. Those runs
+changed nothing in the repository, so they show nothing about the stop hook.
+
+Not run: the stop hook from `~/.gemini/config/hooks.json`, and the CLI's other
+skills folders; the interactive CLI; the app and the IDE; Antigravity on Linux
+or Windows. Where
+Antigravity keeps an instructions file for all projects was not checked. Its
+CLI's guide to moving over from Gemini CLI treats `~/.gemini/GEMINI.md` as a
+file it may already have loaded. That file is also one of the files
+`doctor.sh` takes as a sign of Gemini CLI, so this is worth settling before
+the block goes there.
+
 ## What differs between the tools
 
-- **Activation is measured on every tool, on Cursor CLI in part.** On Codex
+- **Activation is measured on every tool but Antigravity, on Cursor CLI in
+  part.** On Antigravity it is not measured yet. In the one run above, the
+  agent opened the skill by reading its `SKILL.md`. On Codex
   CLI 0.157.1 the right skill was read in 75 of 75 runs, first in 70. On
   Gemini CLI 0.62.0 the right skill was called in 54 of 75 runs, and the other
   21 reached for it by reading its file; headless, Gemini did not load any

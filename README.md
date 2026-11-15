@@ -141,7 +141,8 @@ ask the way they normally do. That part has not been tested.
 The skills are the same folders on every tool. On Claude Code a plugin
 installs them and wires both hooks in one command. On Codex CLI, Cursor CLI
 and Gemini CLI one copy command installs the skills, and each tool takes a few
-lines of hook settings. What was run on each tool, and what comes from its
+lines of hook settings. Antigravity takes a copy command of its own and the
+same kind of hook settings. What was run on each tool, and what comes from its
 documentation, is under
 [What was run on each tool](evals/README.md#what-was-run-on-each-tool).
 
@@ -252,6 +253,27 @@ for Cursor CLI: Claude Code 2.1.277 and later reads a project's `AGENTS.md`
 when the project has no `CLAUDE.md`, per its changelog. So the block reaches
 Claude Code in that project too.
 
+### Antigravity
+
+Antigravity does not read `~/.agents/skills/`. Its app, its IDE and its CLI
+read `~/.gemini/config/skills/`:
+
+```bash
+mkdir -p ~/.gemini/config/skills && cp -R open-steps/skills/os-* ~/.gemini/config/skills/
+```
+
+The routing block goes in `AGENTS.md` in the project root. The hooks go in
+`~/.gemini/config/hooks.json`, through `hooks/adapter.sh`, with the stop hook
+on `Stop`, as [Antigravity](docs/other-agents.md#antigravity) shows. Check
+with `bash open-steps/doctor.sh`. To update, run `git pull` inside
+`open-steps/`, then the copy command again. To remove, delete the `os-*`
+folders from `~/.gemini/config/skills/`, the block from `AGENTS.md`, and the
+`open-steps` entry from `~/.gemini/config/hooks.json`. Both hooks were run in
+a project's own `.agents/` folder. The skills folder for your user and the
+session-start hook from `~/.gemini/config/hooks.json` were run too; the stop
+hook from that file, the app and the IDE come from Antigravity's
+documentation.
+
 ## Numbers
 
 The pack tells the agent to separate what it measured from what it assumed.
@@ -320,7 +342,7 @@ as [What it does on its own](#what-it-does-on-its-own) says.
 ### The hooks
 
 Two hooks ship with the pack. The Claude Code plugin connects them for you. On
-Codex CLI, Cursor CLI and Gemini CLI you wire them by hand, as
+Codex CLI, Cursor CLI, Gemini CLI and Antigravity you wire them by hand, as
 [`docs/other-agents.md`](docs/other-agents.md#the-hooks) shows.
 
 [`session-start.sh`](hooks/session-start.sh) puts the routing table and the
