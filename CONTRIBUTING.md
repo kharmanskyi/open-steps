@@ -71,8 +71,8 @@ Cursor CLI runners, are worked examples for a tool with no skill tool, and
 Antigravity, `doctor.sh` and the scripts the skills ship. It uses throwaway
 repositories and a throwaway home folder, so it touches nothing of yours.
 `bash evals/test.sh` tests the scorer and the runners. It uses stand-ins for
-`claude`, `codex` and `gemini`, and a recorded Cursor CLI stream, so no model
-is called. Neither needs Claude Code. To run
+`claude`, `codex`, `gemini` and `agy`, and a recorded Cursor CLI stream, so no
+model is called. Neither needs Claude Code. To run
 a hook by hand, add `</dev/null`. Each hook reads from standard input, and
 without it the hook waits for a payload that never comes.
 

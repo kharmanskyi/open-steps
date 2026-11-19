@@ -140,7 +140,8 @@ bash evals/test.sh
 
 `run.sh` decides what to ask and when; one script per tool does the asking.
 Claude Code's is `agents/claude.sh`, Codex CLI's is `agents/codex.sh`, Cursor
-CLI's is `agents/cursor.sh`, and Gemini CLI's is `agents/gemini-cli.sh`.
+CLI's is `agents/cursor.sh`, Gemini CLI's is `agents/gemini-cli.sh`, and
+Antigravity CLI's is `agents/antigravity.sh`.
 `EVAL_AGENT` picks another by name from the same folder, or by path while it
 is still being written, and the model names are then that tool's own:
 
@@ -189,7 +190,9 @@ agent never wears a Claude tier name. CASE 13 puts the Codex runner through a
 stand-in `codex` that answers in the shape `codex exec --json` writes, and
 CASE 14 the Gemini CLI runner through a stand-in `gemini` that answers in the
 shape `gemini -p -o stream-json` writes. CASE 15 scores a Cursor CLI stream
-under its `models.md` row. Try a new runner the same way before
+under its `models.md` row. CASE 17 puts the Antigravity runner through a
+stand-in `agy` that answers in the shape `agy -p --output-format stream-json`
+writes, and scores its fixture under its row. Try a new runner the same way before
 the first paid run, then with one real phrase.
 A day measured through it is scored on its own, never into `results.md`:
 `python3 evals/score.py --print <that day> > evals/results-<agent>.md`, as

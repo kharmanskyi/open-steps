@@ -1,0 +1,14 @@
+{"event": "init", "conversation_id": "c-1", "init": {"model": "gemini-3.8-flash-high", "cwd": "/tmp/work", "tools": ["list_dir", "read_file", "run_command", "view_file"], "permission_mode": "default"}}
+{"type": "system", "subtype": "init", "model": "gemini-3.8-flash-high", "agent": "antigravity"}
+{"event": "step_update", "step_update": {"conversation_id": "c-1", "step_index": 0, "state": "DONE", "step_type": "user_input"}}
+{"event": "step_update", "step_update": {"conversation_id": "c-1", "step_index": 1, "state": "DONE", "step_type": "agent_response"}}
+{"event": "step_update", "step_update": {"conversation_id": "c-1", "step_index": 2, "state": "ACTIVE", "step_type": "tool", "tool_name": "read_file", "tool_info": {"name": "read_file", "parameters": {"Path": "/home/u/.gemini/config/skills/os-done-or-not/SKILL.md"}}}}
+{"type": "assistant", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "step_2-os-done-or-not", "name": "Skill", "input": {"skill": "os-done-or-not"}}]}}
+{"event": "step_update", "step_update": {"conversation_id": "c-1", "step_index": 2, "state": "DONE", "step_type": "tool", "tool_name": "read_file", "tool_info": {"name": "read_file", "parameters": {"Path": "/home/u/.gemini/config/skills/os-done-or-not/SKILL.md"}, "output": "167 lines"}}}
+{"event": "step_update", "step_update": {"conversation_id": "c-1", "step_index": 4, "state": "ACTIVE", "step_type": "tool", "tool_name": "read_file", "tool_info": {"name": "read_file", "parameters": {"Path": "/home/u/.gemini/config/skills/os-big-picture/SKILL.md"}}}}
+{"type": "assistant", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "step_4-os-big-picture", "name": "Skill", "input": {"skill": "os-big-picture"}}]}}
+{"event": "step_update", "step_update": {"conversation_id": "c-1", "step_index": 4, "state": "DONE", "step_type": "tool", "tool_name": "read_file", "tool_info": {"name": "read_file", "parameters": {"Path": "/home/u/.gemini/config/skills/os-big-picture/SKILL.md"}, "output": "167 lines"}}}
+{"event": "step_update", "step_update": {"conversation_id": "c-1", "step_index": 9, "state": "ACTIVE", "step_type": "tool", "tool_name": "run_command", "tool_info": {"name": "run_command", "parameters": {"CommandLine": "git status --porcelain; git log --oneline -10"}}}}
+{"event": "step_update", "step_update": {"conversation_id": "c-1", "step_index": 9, "state": "DONE", "step_type": "tool", "tool_name": "run_command", "tool_info": {"name": "run_command", "parameters": {"CommandLine": "git status --porcelain; git log --oneline -10"}}}}
+{"event": "result", "result": {"conversation_id": "c-1", "status": "SUCCESS", "response": "", "num_turns": 1, "denied_actions": [{"action": "command", "display_name": "RunCommand"}]}}
+{"type": "result", "result": "", "permission_denials": []}

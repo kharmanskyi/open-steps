@@ -510,6 +510,106 @@ check "Sonnet 5.5 and Opus 5.5 get their own columns, and Opus 5 keeps its own" 
   "$(has "$out" '| Skill | Sonnet 5.5 | Opus 5.5 | Opus 5 |')"
 check "each run is counted in its own column" yes \
   "$(has "$out" '| `os-done-or-not` | 1/1 | 1/1 | 1/1 |')"
+echo "CASE 17  the Antigravity runner turns a read of SKILL.md into one Skill call"
+H="$(mktemp -d)"
+new_stubs
+# A stand-in agy: writes down its arguments and what arrived on stdin, then
+# answers with events in the shape `agy -p --output-format stream-json`
+# writes. A Skill call's id is the step's index and the skill's name. The
+# steps in it:
+#   2  reads os-done-or-not with read_file, seen as ACTIVE and again as DONE
+#   3  reads os-big-picture, and the read ends in ERROR, as a read outside
+#      the workspace does headless
+#   4  reads os-say-simple with view_file, under another parameter name
+#   5  reads a file under references/: no opening
+#   6  reads a SKILL.md of a skill that is not the pack's: no opening
+#   7  lists a skill's folder: no opening
+#   8  reads os-check-work's SKILL.md with a shell command: no opening
+#   9  reads SKILL.md.bak: no opening
+#   10  writes os-step-by-step's SKILL.md: no opening
+stand_in agy <<'STUB'
+#!/usr/bin/env bash
+stub-record "$@"
+cat > "$STUB_STDIN"
+[ -n "${STUB_FAIL:-}" ] && { echo "error: authentication failed or timed out" >&2; exit 1; }
+python3 - <<'PY'
+import json, os
+S, W = "/home/u/.gemini/config/skills/", "/tmp/work/.agents/skills/"
+
+
+def out(line):
+    print(json.dumps(line))
+
+
+def step(i, state, tool, params, **extra):
+    out({"event": "step_update", "step_update": {"conversation_id": "c-1", "step_index": i, "state": state,
+         "step_type": "tool", "tool_name": tool,
+         "tool_info": dict({"name": tool, "parameters": params}, **extra)}})
+
+
+out({"event": "init", "conversation_id": "c-1", "init": {"model": "gemini-3.8-flash-high", "cwd": "/tmp/work",
+     "tools": ["list_dir", "read_file", "run_command", "view_file", "write_to_file"], "permission_mode": "default"}})
+out({"event": "step_update", "step_update": {"conversation_id": "c-1", "step_index": 0, "state": "DONE", "step_type": "user_input"}})
+step(2, "ACTIVE", "read_file", {"Path": W + "os-done-or-not/SKILL.md"})
+step(2, "DONE", "read_file", {"Path": W + "os-done-or-not/SKILL.md"}, output="167 lines")
+step(3, "ACTIVE", "read_file", {"Path": S + "os-big-picture/SKILL.md"})
+step(3, "ERROR", "read_file", {"Path": S + "os-big-picture/SKILL.md"},
+     error={"type": "TOOL_ERROR", "message": "permission check failed for read_file"})
+step(4, "DONE", "view_file", {"AbsolutePath": S + "os-say-simple/SKILL.md"})
+step(5, "DONE", "read_file", {"Path": W + "os-whats-next/references/a.md"})
+step(6, "DONE", "read_file", {"Path": "/x/someone-elses-skill/SKILL.md"})
+step(7, "DONE", "list_dir", {"DirectoryPath": S + "os-check-work"})
+step(8, "DONE", "run_command", {"CommandLine": "cat " + S + "os-check-work/SKILL.md"})
+step(9, "DONE", "read_file", {"Path": W + "os-step-by-step/SKILL.md.bak"})
+step(10, "DONE", "write_to_file", {"TargetFile": W + "os-step-by-step/SKILL.md"})
+status = "ERROR" if os.environ.get("STUB_UNFINISHED") else "SUCCESS"
+out({"event": "result", "result": {"conversation_id": "c-1", "status": status, "response": "Done: yes.",
+     "denied_actions": [{"action": "read_file", "display_name": "ReadFile"}]}})
+PY
+STUB
+out="$(cd "$STUB" && echo "piped" | HOME="$H" PATH="$STUB:$PATH" \
+  bash "$PACK/evals/agents/antigravity.sh" plain gemini-3.8-flash-high "Are we done?")"
+check "the runner finishes" 0 $?
+check "one headless run in the stream shape, the prompt and the model passed through" 1 \
+  "$(grep -c -- "^-p${TAB}Are we done?${TAB}--model${TAB}gemini-3.8-flash-high${TAB}--output-format${TAB}stream-json${TAB}$" "$STUB_LOG")"
+check "nothing piped reaches agy, so the phrase arrives alone" 0 "$(wc -c < "$STUB_STDIN" | tr -d ' ')"
+check "the init line names the model the stream carries and the agent" 1 \
+  "$(count "$out" '"subtype": "init", "model": "gemini-3.8-flash-high", "agent": "antigravity"')"
+check "one Skill call per pack skill read, 3 in all" 3 "$(count "$out" '"name": "Skill"')"
+check "a read reported as ACTIVE and again as DONE is called once, with the step and the skill's short name" 1 \
+  "$(count "$out" '"id": "step_2-os-done-or-not", "name": "Skill", "input": {"skill": "os-done-or-not"}')"
+check "a read with view_file, under any parameter name, counts" 1 "$(count "$out" '"id": "step_4-os-say-simple"')"
+check "a references file, another skill, a listing, a shell command, SKILL.md.bak and a write do not" 0 \
+  "$(count "$out" -E '"id": "step_(5|6|7|8|9|10)-')"
+check "a read that ended in ERROR is listed as refused, one that ran is not" 1 \
+  "$(count "$out" '"permission_denials": \[{"tool_name": "Skill", "tool_use_id": "step_3-os-big-picture"}\]')"
+check "the result line carries the answer" 1 "$(count "$out" '"type": "result", "result": "Done: yes."')"
+check "agy's own events pass through" 1 "$(count "$out" '"event": "result"')"
+out="$(cd "$STUB" && HOME="$H" STUB_UNFINISHED=1 PATH="$STUB:$PATH" \
+  bash "$PACK/evals/agents/antigravity.sh" plain gemini-3.8-flash-high "Are we done?" 2>/dev/null)"
+check "a run whose result is not SUCCESS writes no result line, so the scorer sees it unfinished" 0 \
+  "$(count "$out" '"type": "result", "result":')"
+check "and still keeps the calls the model made" 1 "$(count "$out" '"skill": "os-done-or-not"')"
+( cd "$STUB" && HOME="$H" STUB_FAIL=1 PATH="$STUB:$PATH" bash "$PACK/evals/agents/antigravity.sh" plain gemini-3.8-flash-high "say just: ok" >/dev/null 2>&1 )
+check "an agy that fails fails the runner, so the auth check stops the sweep" 1 $?
+for arm in with without; do
+  err="$(HOME="$H" PATH="$STUB:$PATH" bash "$PACK/evals/agents/antigravity.sh" "$arm" gemini-3.8-flash-high x 2>&1 >/dev/null)"
+  check "the $arm arm exits 2" 2 $?
+  check "with one line on stderr" 1 "$(printf '%s\n' "$err" | grep -c .)"
+done
+rm -rf "$H" "$STUB"
+# fixtures/antigravity/ is hand-made in the shape this runner writes,
+# Antigravity's own events kept: an init line after agy's, each Skill call as
+# its read starts, under the step's index and the skill's name, and a result
+# line with an empty answer, as a run has once headless refuses the git
+# command a report phrase leads to. In the run of the first os-done-or-not
+# phrase the agent read that skill and then os-big-picture; in the run of the
+# second it read os-big-picture alone, the wrong skill, which is a miss.
+out="$(score antigravity)"
+check "the scorer labels the Antigravity column by its models.md row" yes \
+  "$(has "$out" '| Skill | Gemini 3.8 Flash High (Antigravity) |')"
+check "a run that opened the skill asked for is a hit, and one that opened only another a miss" yes \
+  "$(has "$out" '| `os-done-or-not` | 1/2 |')"
 echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

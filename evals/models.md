@@ -37,3 +37,4 @@ keeps its row, so an older day still scores under its own names.
 | codex:gpt-6-sol | GPT-6 Sol (Codex) |
 | gemini-cli:gemini-3.5-flash-lite | Gemini 3.5 Flash Lite (Gemini CLI) |
 | cursor:Auto | Cursor (Auto) |
+| antigravity:gemini-3.8-flash-high | Gemini 3.8 Flash High (Antigravity) |
